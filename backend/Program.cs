@@ -18,5 +18,6 @@ app.MapControllers();
 
 // If no API endpoint matches, serve the Angular app's index.html
 app.MapFallbackToFile("index.html");
+app.MapGet("/", () => "Hello World!");
 
 app.Run();
