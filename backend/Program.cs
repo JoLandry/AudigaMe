@@ -1,7 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();  // <-- This line is essential to add controller services
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -14,7 +14,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapControllers();  // <-- This line ensures that the controllers are mapped to endpoints
+app.MapControllers();
 
 // If no API endpoint matches, serve the Angular app's index.html
 app.MapFallbackToFile("index.html");
