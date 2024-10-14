@@ -48,5 +48,22 @@ namespace AudioObjects
         {
             return this.data;
         }
+
+
+        // Two Audio objects are considered equal when their title AND artist(s) are the same
+        // or when their id is the same
+        public override bool Equals(object? audio)
+        {
+            if (audio == null || GetType() != audio.GetType()){
+                return false;
+            }
+            Audio other = (Audio)audio;
+            return (other.getTitle() == this.getTitle()) && (other.getArtist() == this.getArtist()) && (other.getId() == this.getId());
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.id);
+        }
     }
 }
