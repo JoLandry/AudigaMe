@@ -16,6 +16,9 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Ignore the uploads directory
+/src/resources/uploads/
+
 # Mono auto generated files
 mono_crash.*
 

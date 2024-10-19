@@ -1,5 +1,10 @@
 namespace AudioObjects
 {
+    public interface IAudioService
+    {
+        Task SaveAsync(Audio audio);
+    }
+
     public class Audio
     {
         private string title;
@@ -49,21 +54,26 @@ namespace AudioObjects
             return this.data;
         }
 
+        public string getPath()
+        {
+            return this.path;
+        }
+
 
         // Two Audio objects are considered equal when their title AND artist(s) are the same
         // or when their id is the same
         public override bool Equals(object? audio)
         {
-            if (audio == null || GetType() != audio.GetType()){
+            if(audio == null || GetType() != audio.GetType()){
                 return false;
             }
             Audio other = (Audio)audio;
-            return (other.getTitle() == this.getTitle()) && (other.getArtist() == this.getArtist()) && (other.getId() == this.getId());
+            return this.id == other.getId();
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.id);
+            return this.id.GetHashCode();
         }
     }
 }
