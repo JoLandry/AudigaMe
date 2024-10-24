@@ -19,12 +19,14 @@ namespace HttpAudioControllers
             _audioService = audioService;
         }
 
+
         [HttpGet]
         [Route("/")]
         public Task<string> basicGetRequest()
         {
             return Task.FromResult("Hello World!");
         }
+
 
         // Send POST request
         public async Task sendPostForAudio(Audio audio, string path)
@@ -51,6 +53,7 @@ namespace HttpAudioControllers
                 }
             }
         }
+
 
         // Handle POST request
         [HttpPost("audios")]
@@ -92,15 +95,16 @@ namespace HttpAudioControllers
                 // Save the Audio object
                 await _audioService.SaveAsync(newAudio);
 
-                return CreatedAtAction(nameof(GetAudioById), new { id = newAudio.getId() }, newAudio);
+                return CreatedAtAction(nameof(getAudioById), new { id = newAudio.getId() }, newAudio);
             } catch (Exception e){
                 return StatusCode(500, "Internal server error: " + e.Message);
             }
         }
 
+
         [HttpGet]
         [Route("/audios/{id}")]
-        public async Task<IActionResult> GetAudioById(int id)
+        public async Task<IActionResult> getAudioById(int id)
         {
             var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
 
@@ -114,7 +118,6 @@ namespace HttpAudioControllers
             }
             // Check if the file exists
             if(filePath == null || !System.IO.File.Exists(filePath)){
-                Console.WriteLine("SIKE\n");
                 return NotFound();
             }
             // Read the file into a byte array
@@ -134,5 +137,57 @@ namespace HttpAudioControllers
             // Return the byte array as a file
             return File(fileData,"audio/mpeg");;
         }
+
+
+        [HttpDelete("{id:int}")]
+        [Route("/audios/{id}")]
+        public async Task<IActionResult> DeleteAudio(int id)
+        {
+            try{
+                var audioToDelete = AudioServices.retrieveAudioById(id);
+                if(audioToDelete == null){
+                    return NotFound($"Audio with id = {id} not found");
+                }
+                await AudioServices.removeAudioFromList(audioToDelete);
+                return NoContent();
+            } catch(Exception){
+                return StatusCode(StatusCodes.Status500InternalServerError,"Error when trying to delete data");
+            }
+        }
+
+
+        [HttpGet]
+        [Route("/audios")]
+        public IActionResult GetAudioList()
+        {
+            List<Audio> audios = AudioServices.getAudioList();
+            if(audios == null || audios.Count == 0){
+                return NotFound("No audios found");
+            }
+
+            var audioMetadataList = audios.Select(audio => new 
+            {
+                Id = audio.getId(),
+                Title = audio.getTitle(),
+                Artist = audio.getArtist(),
+                Type = audio.getType(),
+                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.getId() })
+            }).ToList();
+
+            return Ok(audioMetadataList);
+        }
+
+
+        /*
+        Need of PUT Http method ?
+        => Change name of audio ????
+
+        [HttpPut("{id:int}")]
+        [Route("/audios/{id}")]
+        public async Task<IActionResult> UpdateAudio(int id)
+        {
+            // Smth
+        }
+        */
     }
 }

@@ -30,11 +30,12 @@ namespace AudioUtils
             return true;
         }
 
-        public static void removeAudioFromList(Audio audio)
+        public static async Task removeAudioFromList(Audio audio)
         {
             List<Audio> listOfAudios = getAudioList();
-            if(listOfAudios.Contains(audio)){
+            if (listOfAudios.Contains(audio)){
                 listOfAudios.Remove(audio);
+                await Task.CompletedTask;
             }
         }
 
@@ -66,7 +67,6 @@ namespace AudioUtils
             // Write the audio data to the file
             await File.WriteAllBytesAsync(filePath,audio.getData());
 
-            // Optionally, add it to the in-memory list
             //addAudioToList(audio);
         }
     }
