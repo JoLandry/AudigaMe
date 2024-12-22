@@ -3,35 +3,55 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO;
 using AudioObjects;
+using AudioPersistenceService;
 using AudioUtils;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HttpAudioControllers
 {
+
+    public class UpdateAudioRequest
+    {
+        public string? Title { get; set; }
+        public string? Artist { get; set; }
+        public bool? IsFavorite { get; set; }
+    }
+
+
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IAudioService _audioService;
 
-        // Constructor to inject the audio service
         public UserController(IAudioService audioService)
         {
             _audioService = audioService;
         }
 
+        public async Task<IActionResult> InitializeAudioService()
+        {
+            try {
+                await _audioService.InitializeAsync();
+                return Ok("Audio service initialized successfully.");
+            } catch(Exception ex){
+                return StatusCode(500, "Error initializing audio service: " + ex.Message);
+            }
+        }
 
         [HttpGet]
         [Route("/")]
         public Task<string> basicGetRequest()
         {
-            return Task.FromResult("Hello World!");
+            return Task.FromResult("Hello World! Welcome to AudigaMe!");
         }
 
 
         // Send POST request
         public async Task sendPostForAudio(Audio audio, string path)
         {
-            using (var httpClient = new HttpClient())
+            using(var httpClient = new HttpClient())
             {
                 var formData = new MultipartFormDataContent();
 
@@ -39,9 +59,10 @@ namespace HttpAudioControllers
                 formData.Add(new StringContent(audio.getArtist()), "artist");
                 formData.Add(new StringContent(audio.getType()), "type");
                 formData.Add(new StringContent(audio.getId().ToString()), "id");
+                formData.Add(new StringContent(audio.isAudioFavorite().ToString()), "false");
 
                 byte[] audioData = await System.IO.File.ReadAllBytesAsync(path);
-                formData.Add(new ByteArrayContent(audioData), "data", Path.GetFileName(path));
+                formData.Add(new ByteArrayContent(audioData),"data",Path.GetFileName(path));
 
                 var response = await httpClient.PostAsync("http://localhost:5174/audios/",formData);
 
@@ -71,7 +92,7 @@ namespace HttpAudioControllers
 
             // Read the file into a byte array
             byte[] fileData;
-            using (var memoryStream = new MemoryStream())
+            using(var memoryStream = new MemoryStream())
             {
                 await audioFile.CopyToAsync(memoryStream);
                 fileData = memoryStream.ToArray();
@@ -81,19 +102,16 @@ namespace HttpAudioControllers
                 var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
                 // Save the file
                 string newFileName = $"{title}{fileExtension}";
-                var filePath = Path.Combine(uploadsDirectory, newFileName);
+                var filePath = Path.Combine(uploadsDirectory,newFileName);
                 using(var stream = new FileStream(filePath,FileMode.Create,FileAccess.Write)){
                     await audioFile.CopyToAsync(stream);
                 }
 
                 // Create a new Audio object
                 var newAudio = new Audio(title,artist,fileData,fileExtension);
-                AudioServices.addAudioToList(newAudio);
+                await _audioService.addAudioToList(newAudio);
 
                 Console.WriteLine($"Audio added with ID: {newAudio.getId()}, Title: {newAudio.getTitle()}, Artist: {newAudio.getArtist()}");
-                
-                // Save the Audio object
-                await _audioService.SaveAsync(newAudio);
 
                 return CreatedAtAction(nameof(getAudioById), new { id = newAudio.getId() }, newAudio);
             } catch (Exception e){
@@ -106,10 +124,9 @@ namespace HttpAudioControllers
         [Route("/audios/{id}")]
         public async Task<IActionResult> getAudioById(int id)
         {
-            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
+            var audioToRetrieve = await _audioService.retrieveAudioById(id);
 
-            Audio? audioToRetrieve = AudioServices.retrieveAudioById(id);
-
+            /*
             string? filePath = null;
             if(audioToRetrieve != null){
                 var fileName = audioToRetrieve.getTitle();
@@ -120,6 +137,19 @@ namespace HttpAudioControllers
             if(filePath == null || !System.IO.File.Exists(filePath)){
                 return NotFound();
             }
+            */
+
+            if(audioToRetrieve == null){
+                return NotFound($"Audio with ID {id} not found.");
+            }
+
+            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "uploads");
+            string filePath = Path.Combine(uploadsDirectory, $"{audioToRetrieve.getTitle()}{audioToRetrieve.getType()}");
+
+            if(!System.IO.File.Exists(filePath)){
+                return NotFound();
+            }
+
             // Read the file into a byte array
             byte[] fileData;
             try {
@@ -134,21 +164,25 @@ namespace HttpAudioControllers
                 Console.WriteLine($"File found but it is empty: {filePath}");
                 return NotFound();
             }
+
             // Return the byte array as a file
             return File(fileData,"audio/mpeg");;
         }
 
 
-        [HttpDelete("{id:int}")]
-        [Route("/audios/{id}")]
+        [HttpDelete("audios/{id:int}")]
         public async Task<IActionResult> DeleteAudio(int id)
         {
-            try{
-                var audioToDelete = AudioServices.retrieveAudioById(id);
+            Console.WriteLine("Entering DeleteAudio method\n");
+            try {
+                var audioToDelete = await _audioService.retrieveAudioById(id);
                 if(audioToDelete == null){
+                    Console.WriteLine("Audio not found\n");
                     return NotFound($"Audio with id = {id} not found");
                 }
-                await AudioServices.removeAudioFromList(audioToDelete);
+                Console.WriteLine("Before remove method\n");
+                await _audioService.removeAudioFromList(audioToDelete);
+                Console.WriteLine("After remove method\n");
                 return NoContent();
             } catch(Exception){
                 return StatusCode(StatusCodes.Status500InternalServerError,"Error when trying to delete data");
@@ -158,9 +192,9 @@ namespace HttpAudioControllers
 
         [HttpGet]
         [Route("/audios")]
-        public IActionResult GetAudioList()
+        public async Task<IActionResult> GetAudioList()
         {
-            List<Audio> audios = AudioServices.getAudioList();
+            var audios = await _audioService.getAudioList();
             if(audios == null || audios.Count == 0){
                 return NotFound("No audios found");
             }
@@ -171,23 +205,37 @@ namespace HttpAudioControllers
                 Title = audio.getTitle(),
                 Artist = audio.getArtist(),
                 Type = audio.getType(),
-                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.getId() })
+                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.getId() }),
+                IsFavorite = audio.isAudioFavorite()
             }).ToList();
 
             return Ok(audioMetadataList);
         }
 
 
-        /*
-        Need of PUT Http method ?
-        => Change name of audio ????
-
-        [HttpPut("{id:int}")]
-        [Route("/audios/{id}")]
-        public async Task<IActionResult> UpdateAudio(int id)
+        [HttpPut("audios/{id:int}")]
+        public async Task<IActionResult> UpdateAudio(int id, [FromBody] UpdateAudioRequest updateRequest)
         {
-            // Smth
+            try {
+                var audioToUpdate = await _audioService.retrieveAudioById(id);
+                if(audioToUpdate == null){
+                    return NotFound($"Audio with id = {id} not found");
+                }
+                if(!string.IsNullOrEmpty(updateRequest.Title)){
+                    audioToUpdate.setTitle(updateRequest.Title);
+                }
+                if(!string.IsNullOrEmpty(updateRequest.Artist)){
+                    audioToUpdate.setArtist(updateRequest.Artist);
+                }
+                if(updateRequest.IsFavorite.HasValue){
+                    audioToUpdate.setFavoriteStatus(updateRequest.IsFavorite.Value);
+                }
+
+                await _audioService.SaveAsync(audioToUpdate);
+                return Ok(audioToUpdate);
+            } catch(Exception ex){
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error updating the audio: " + ex.Message);
+            }
         }
-        */
     }
 }

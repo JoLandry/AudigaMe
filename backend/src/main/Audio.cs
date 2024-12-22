@@ -2,8 +2,15 @@ namespace AudioObjects
 {
     public interface IAudioService
     {
+        Task InitializeAsync();
+        Task<List<Audio>> getAudioList();
+        Task<bool> addAudioToList(Audio audio);
+        Task removeAudioFromList(Audio audio);
+        Task<Audio?> retrieveAudioById(int id);
         Task SaveAsync(Audio audio);
+        Task SaveAudioListAsync();
     }
+
 
     public class Audio
     {
@@ -13,6 +20,7 @@ namespace AudioObjects
         private byte[] data;
         /* Take a look at MediaTypeHeaderValue class */ private string type;
         private int id;
+        private bool isFavorite;
 
         private static int count = 0;
 
@@ -26,6 +34,7 @@ namespace AudioObjects
             type = _type;
             path = "/resources/audios/" + title + type;
             data = _data;
+            isFavorite = false;
         }
 
 
@@ -44,9 +53,19 @@ namespace AudioObjects
             return this.artist;
         }
 
+        public void setArtist(string artist)
+        {
+            this.artist = artist;
+        }
+
         public string getTitle()
         {
             return this.title;
+        }
+
+        public void setTitle(string title)
+        {
+            this.title = title;
         }
 
         public byte[] getData()
@@ -59,16 +78,26 @@ namespace AudioObjects
             return this.path;
         }
 
+        public bool isAudioFavorite()
+        {
+            return this.isFavorite;
+        }
+
+        public void setFavoriteStatus(bool status)
+        {
+            this.isFavorite = status;
+        }
+
 
         // Two Audio objects are considered equal when their title AND artist(s) are the same
         // or when their id is the same
-        public override bool Equals(object? audio)
+        public override bool Equals(object? o)
         {
-            if(audio == null || GetType() != audio.GetType()){
+            if(o == null || GetType() != o.GetType()){
                 return false;
             }
-            Audio other = (Audio)audio;
-            return this.id == other.getId();
+            Audio otherAudio = (Audio)o;
+            return this.id == otherAudio.getId();
         }
 
         public override int GetHashCode()

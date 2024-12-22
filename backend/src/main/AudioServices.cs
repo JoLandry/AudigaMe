@@ -1,73 +1,71 @@
 using AudioObjects;
 using System.IO;
+using AudioPersistenceService;
 using System.Threading.Tasks;
 
 namespace AudioUtils
 {
     public class AudioServices: IAudioService
     {
-        private static List<Audio> audioList = new List<Audio>();
+        private List<Audio> audioList = new List<Audio>();
+        private readonly AudioPersistence _persistenceService;
 
-        public AudioServices(){}
-
-
-        public static List<Audio> getAudioList()
+        public AudioServices(AudioPersistence persistenceService)
         {
-            return audioList;
+            _persistenceService = persistenceService;
         }
 
-        public static bool addAudioToList(Audio audio)
+        public async Task InitializeAsync()
         {
-            List<Audio> listOfAudios = getAudioList();
+            await LoadAudioListAsync();
+        }
 
+        public async Task<List<Audio>> getAudioList()
+        {
+            return await Task.FromResult(audioList);
+        }
+
+        public async Task<bool> addAudioToList(Audio audio)
+        {
             // Check if the element (Audio object) is already in the list
-            foreach(Audio audioCmp in listOfAudios){
+            foreach(Audio audioCmp in this.audioList){
                 if(audioCmp.Equals(audio)){
                     return false;
                 }
             }
-            audioList.Add(audio);
+            this.audioList.Add(audio);
+            await SaveAudioListAsync();
             return true;
         }
 
-        public static async Task removeAudioFromList(Audio audio)
+        public async Task removeAudioFromList(Audio audio)
         {
-            List<Audio> listOfAudios = getAudioList();
-            if (listOfAudios.Contains(audio)){
-                listOfAudios.Remove(audio);
-                await Task.CompletedTask;
+            var audioToRemove = this.audioList.FirstOrDefault(a => a.getId() == audio.getId());
+            if(audioToRemove != null){
+                this.audioList.Remove(audioToRemove);
+                await SaveAudioListAsync();
             }
         }
 
-        public static Audio? retrieveAudioById(int id)
+        public async Task<Audio?> retrieveAudioById(int id)
         {
-            List<Audio> listOfAudios = getAudioList();
-            foreach(Audio audioCmp in listOfAudios){
-                if(audioCmp.getId() == id){
-                    return audioCmp;
-                }
-            }
-            return null;
+            List<Audio> listOfAudios = await getAudioList();
+            return listOfAudios.FirstOrDefault(audio => audio.getId() == id);
         }
-
 
         public async Task SaveAsync(Audio audio)
         {
-            // Example: Save the audio data to the file system
-            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
+            await addAudioToList(audio);
+        }
 
-            // Ensure the directory exists
-            if(!Directory.Exists(uploadsDirectory)){
-                Directory.CreateDirectory(uploadsDirectory);
-            }
+        public async Task SaveAudioListAsync()
+        {
+            await _persistenceService.SaveAudioListAsync(this.audioList);
+        }
 
-            // Define the file path
-            var filePath = Path.Combine(uploadsDirectory, audio.getTitle() + audio.getType());
-
-            // Write the audio data to the file
-            await File.WriteAllBytesAsync(filePath,audio.getData());
-
-            //addAudioToList(audio);
+        public async Task LoadAudioListAsync()
+        {
+            this.audioList = await _persistenceService.LoadAudioListAsync();
         }
     }
 }
