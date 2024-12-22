@@ -125,20 +125,6 @@ namespace HttpAudioControllers
         public async Task<IActionResult> getAudioById(int id)
         {
             var audioToRetrieve = await _audioService.retrieveAudioById(id);
-
-            /*
-            string? filePath = null;
-            if(audioToRetrieve != null){
-                var fileName = audioToRetrieve.getTitle();
-                var fileExt = audioToRetrieve.getType();
-                filePath = Path.Combine(uploadsDirectory,fileName+fileExt);
-            }
-            // Check if the file exists
-            if(filePath == null || !System.IO.File.Exists(filePath)){
-                return NotFound();
-            }
-            */
-
             if(audioToRetrieve == null){
                 return NotFound($"Audio with ID {id} not found.");
             }
