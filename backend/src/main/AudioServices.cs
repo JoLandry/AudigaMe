@@ -7,12 +7,13 @@ namespace AudioUtils
 {
     public class AudioServices: IAudioService
     {
-        private List<Audio> audioList = new List<Audio>();
+        private List<Audio> audioList;
         private readonly AudioPersistence _persistenceService;
 
         public AudioServices(AudioPersistence persistenceService)
         {
             _persistenceService = persistenceService;
+            this.audioList = new List<Audio>();
         }
 
         public async Task InitializeAsync()
@@ -20,9 +21,9 @@ namespace AudioUtils
             await LoadAudioListAsync();
         }
 
-        public async Task<List<Audio>> getAudioList()
+        public Task<List<Audio>> getAudioList()
         {
-            return await Task.FromResult(audioList);
+            return Task.FromResult(audioList);
         }
 
         public async Task<bool> addAudioToList(Audio audio)
@@ -40,7 +41,7 @@ namespace AudioUtils
 
         public async Task removeAudioFromList(Audio audio)
         {
-            var audioToRemove = this.audioList.FirstOrDefault(a => a.getId() == audio.getId());
+            var audioToRemove = this.audioList.FirstOrDefault(a => a.Id == audio.Id);
             if(audioToRemove != null){
                 this.audioList.Remove(audioToRemove);
                 await SaveAudioListAsync();
@@ -50,12 +51,18 @@ namespace AudioUtils
         public async Task<Audio?> retrieveAudioById(int id)
         {
             List<Audio> listOfAudios = await getAudioList();
-            return listOfAudios.FirstOrDefault(audio => audio.getId() == id);
+            return listOfAudios.FirstOrDefault(audio => audio.Id == id);
         }
 
         public async Task SaveAsync(Audio audio)
         {
-            await addAudioToList(audio);
+            var existingAudio = audioList.FirstOrDefault(a => a.Id == audio.Id);
+            if(existingAudio != null){
+                existingAudio.Title = audio.Title;
+                existingAudio.Artist = audio.Artist;
+                existingAudio.IsFavorite = audio.IsFavorite;
+            }
+            await SaveAudioListAsync();
         }
 
         public async Task SaveAudioListAsync()

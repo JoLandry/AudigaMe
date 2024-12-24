@@ -17,7 +17,7 @@
 *.userprefs
 
 # Ignore the uploads directory
-/src/resources/uploads/
+backend/src/resources/uploads/
 
 # Mono auto generated files
 mono_crash.*

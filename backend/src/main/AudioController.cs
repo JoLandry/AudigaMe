@@ -55,14 +55,14 @@ namespace HttpAudioControllers
             {
                 var formData = new MultipartFormDataContent();
 
-                formData.Add(new StringContent(audio.getTitle()), "title");
-                formData.Add(new StringContent(audio.getArtist()), "artist");
-                formData.Add(new StringContent(audio.getType()), "type");
-                formData.Add(new StringContent(audio.getId().ToString()), "id");
-                formData.Add(new StringContent(audio.isAudioFavorite().ToString()), "false");
+                formData.Add(new StringContent(audio.Title), "Title");
+                formData.Add(new StringContent(audio.Artist), "Artist");
+                formData.Add(new StringContent(audio.Type), "Type");
+                formData.Add(new StringContent(audio.Id.ToString()), "Id");
+                formData.Add(new StringContent(audio.IsFavorite.ToString()), "False");
 
                 byte[] audioData = await System.IO.File.ReadAllBytesAsync(path);
-                formData.Add(new ByteArrayContent(audioData),"data",Path.GetFileName(path));
+                formData.Add(new ByteArrayContent(audioData),"Data",Path.GetFileName(path));
 
                 var response = await httpClient.PostAsync("http://localhost:5174/audios/",formData);
 
@@ -111,9 +111,9 @@ namespace HttpAudioControllers
                 var newAudio = new Audio(title,artist,fileData,fileExtension);
                 await _audioService.addAudioToList(newAudio);
 
-                Console.WriteLine($"Audio added with ID: {newAudio.getId()}, Title: {newAudio.getTitle()}, Artist: {newAudio.getArtist()}");
+                Console.WriteLine($"Audio added with ID: {newAudio.Id}, Title: {newAudio.Title}, Artist: {newAudio.Artist}");
 
-                return CreatedAtAction(nameof(getAudioById), new { id = newAudio.getId() }, newAudio);
+                return CreatedAtAction(nameof(getAudioById), new { id = newAudio.Id },newAudio);
             } catch (Exception e){
                 return StatusCode(500, "Internal server error: " + e.Message);
             }
@@ -129,8 +129,8 @@ namespace HttpAudioControllers
                 return NotFound($"Audio with ID {id} not found.");
             }
 
-            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "uploads");
-            string filePath = Path.Combine(uploadsDirectory, $"{audioToRetrieve.getTitle()}{audioToRetrieve.getType()}");
+            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
+            string filePath = Path.Combine(uploadsDirectory, $"{audioToRetrieve.Title}{audioToRetrieve.Type}");
 
             if(!System.IO.File.Exists(filePath)){
                 return NotFound();
@@ -140,15 +140,14 @@ namespace HttpAudioControllers
             byte[] fileData;
             try {
                 fileData = await System.IO.File.ReadAllBytesAsync(filePath);
+                if(fileData.Length == 0){
+                Console.WriteLine($"File found but it is empty: {filePath}");
+                return NotFound();
+                }
             } catch (IOException e){
                 return StatusCode(500, "I/O error occurred: " + e.Message);
             } catch (Exception e){
                 return StatusCode(500, "An unexpected error occurred: " + e.Message);
-            }
-
-            if(fileData.Length == 0){
-                Console.WriteLine($"File found but it is empty: {filePath}");
-                return NotFound();
             }
 
             // Return the byte array as a file
@@ -187,12 +186,12 @@ namespace HttpAudioControllers
 
             var audioMetadataList = audios.Select(audio => new 
             {
-                Id = audio.getId(),
-                Title = audio.getTitle(),
-                Artist = audio.getArtist(),
-                Type = audio.getType(),
-                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.getId() }),
-                IsFavorite = audio.isAudioFavorite()
+                Id = audio.Id,
+                Title = audio.Title,
+                Artist = audio.Artist,
+                Type = audio.Type,
+                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.Id }),
+                IsFavorite = audio.IsFavorite
             }).ToList();
 
             return Ok(audioMetadataList);
@@ -207,14 +206,10 @@ namespace HttpAudioControllers
                 if(audioToUpdate == null){
                     return NotFound($"Audio with id = {id} not found");
                 }
-                if(!string.IsNullOrEmpty(updateRequest.Title)){
-                    audioToUpdate.setTitle(updateRequest.Title);
-                }
-                if(!string.IsNullOrEmpty(updateRequest.Artist)){
-                    audioToUpdate.setArtist(updateRequest.Artist);
-                }
+                // For the moment, onyl update if an audio is in the Favorites
+                // Maybe later, the list of Strings reflecting the playlists it's in etc.
                 if(updateRequest.IsFavorite.HasValue){
-                    audioToUpdate.setFavoriteStatus(updateRequest.IsFavorite.Value);
+                    audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
                 }
 
                 await _audioService.SaveAsync(audioToUpdate);

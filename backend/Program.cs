@@ -5,7 +5,6 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Set the file path for audio metadata
 var metadataFilePath = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","audioMetadata.json");
 
 builder.Services.AddSingleton(new AudioPersistence(metadataFilePath));
@@ -25,7 +24,6 @@ try {
     Console.WriteLine($"Error initializing audio services: {e.Message}");
 }
 
-
 // Serve static files from wwwroot folder
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -33,7 +31,6 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-// Map controllers for API endpoints
 app.MapControllers();
 
 // If no API endpoint matches, serve the Angular app's index.html

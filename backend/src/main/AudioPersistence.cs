@@ -17,17 +17,22 @@ namespace AudioPersistenceService
 
         public async Task SaveAudioListAsync(List<Audio> audioList)
         {
-            var jsonData = JsonSerializer.Serialize(audioList, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(_filePath,jsonData);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            var jsonString = JsonSerializer.Serialize(audioList,options);
+            await File.WriteAllTextAsync(_filePath, jsonString);
         }
 
         public async Task<List<Audio>> LoadAudioListAsync()
         {
-            if(!File.Exists(_filePath)){
+            if (!File.Exists(_filePath))
+            {
                 return new List<Audio>();
             }
-            var jsonData = await File.ReadAllTextAsync(_filePath);
-            return JsonSerializer.Deserialize<List<Audio>>(jsonData) ?? new List<Audio>();
+            var jsonString = await File.ReadAllTextAsync(_filePath);
+            return JsonSerializer.Deserialize<List<Audio>>(jsonString) ?? new List<Audio>();
         }
     }
 }

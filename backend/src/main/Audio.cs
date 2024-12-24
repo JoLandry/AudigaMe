@@ -14,80 +14,33 @@ namespace AudioObjects
 
     public class Audio
     {
-        private string title;
-        private string artist;
-        private string path;
-        private byte[] data;
-        /* Take a look at MediaTypeHeaderValue class */ private string type;
-        private int id;
-        private bool isFavorite;
+        public string Title {get;set;} = string.Empty;
+        public string Artist {get;set;} = string.Empty;
+        public string Path {get;set;} = string.Empty;
+        public byte[] Data {get;set;} = Array.Empty<byte>();
+        public string Type {get;set;} = string.Empty;
+        public int Id {get;set;}
+        public bool IsFavorite {get;set;}
 
         private static int count = 0;
 
 
-        public Audio(string _title, string _artist, byte[] _data, string _type)
+        public Audio(string title, string artist, byte[] data, string type)
         {
             count++;
-            id = count;
-            title = _title;
-            artist = _artist;
-            type = _type;
-            path = "/resources/audios/" + title + type;
-            data = _data;
-            isFavorite = false;
+            Id = count;
+            Title = title;
+            Artist = artist;
+            Type = type;
+            Path = "/resources/audios/" + title + type;
+            Data = data;
+            IsFavorite = false;
         }
+        
+        public Audio(){
 
-
-        public int getId()
-        {
-            return this.id;
         }
-
-        public string getType()
-        {
-            return this.type;
-        }
-
-        public string getArtist()
-        {
-            return this.artist;
-        }
-
-        public void setArtist(string artist)
-        {
-            this.artist = artist;
-        }
-
-        public string getTitle()
-        {
-            return this.title;
-        }
-
-        public void setTitle(string title)
-        {
-            this.title = title;
-        }
-
-        public byte[] getData()
-        {
-            return this.data;
-        }
-
-        public string getPath()
-        {
-            return this.path;
-        }
-
-        public bool isAudioFavorite()
-        {
-            return this.isFavorite;
-        }
-
-        public void setFavoriteStatus(bool status)
-        {
-            this.isFavorite = status;
-        }
-
+        
 
         // Two Audio objects are considered equal when their title AND artist(s) are the same
         // or when their id is the same
@@ -97,12 +50,12 @@ namespace AudioObjects
                 return false;
             }
             Audio otherAudio = (Audio)o;
-            return this.id == otherAudio.getId();
+            return Id == otherAudio.Id;
         }
 
         public override int GetHashCode()
         {
-            return this.id.GetHashCode();
+            return Id.GetHashCode();
         }
     }
 }
