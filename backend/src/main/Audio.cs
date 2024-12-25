@@ -22,13 +22,10 @@ namespace AudioObjects
         public int Id {get;set;}
         public bool IsFavorite {get;set;}
 
-        private static int count = 0;
-
 
         public Audio(string title, string artist, byte[] data, string type)
         {
-            count++;
-            Id = count;
+            Id = new Random().Next(1,100000);
             Title = title;
             Artist = artist;
             Type = type;

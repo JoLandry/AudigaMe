@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var metadataFilePath = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","audioMetadata.json");
 
-builder.Services.AddSingleton(new AudioPersistence(metadataFilePath));
+builder.Services.AddSingleton<IAudioPersistence>(_ => new AudioPersistence(metadataFilePath));
 builder.Services.AddSingleton<IAudioService, AudioServices>();
 
 builder.Services.AddControllers();

@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace AudioPersistenceService
 {
-    public class AudioPersistence
+    public interface IAudioPersistence
+    {
+        Task SaveAudioListAsync(List<Audio> audioList);
+        Task<List<Audio>> LoadAudioListAsync();
+    }
+
+    public class AudioPersistence : IAudioPersistence
     {
         private readonly string _filePath;
 

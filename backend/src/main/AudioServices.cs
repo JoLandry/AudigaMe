@@ -8,9 +8,9 @@ namespace AudioUtils
     public class AudioServices: IAudioService
     {
         private List<Audio> audioList;
-        private readonly AudioPersistence _persistenceService;
+        private readonly IAudioPersistence _persistenceService;
 
-        public AudioServices(AudioPersistence persistenceService)
+        public AudioServices(IAudioPersistence persistenceService)
         {
             _persistenceService = persistenceService;
             this.audioList = new List<Audio>();
