@@ -33,8 +33,7 @@ namespace AudioPersistenceService
 
         public async Task<List<Audio>> LoadAudioListAsync()
         {
-            if (!File.Exists(_filePath))
-            {
+            if(!File.Exists(_filePath)){
                 return new List<Audio>();
             }
             var jsonString = await File.ReadAllTextAsync(_filePath);

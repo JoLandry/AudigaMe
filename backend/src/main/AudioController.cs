@@ -129,11 +129,12 @@ namespace HttpAudioControllers
                 return NotFound($"Audio with ID {id} not found.");
             }
 
-            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
-            string filePath = Path.Combine(uploadsDirectory, $"{audioToRetrieve.Title}{audioToRetrieve.Type}");
+            var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..", "..", "..", ".."));
+            var uploadsDirectory = Path.Combine(rootDirectory,"backend","src","resources","uploads");
+            string filePath = Path.Combine(uploadsDirectory,$"{audioToRetrieve.Title}{audioToRetrieve.Type}");
 
             if(!System.IO.File.Exists(filePath)){
-                return NotFound();
+                return NotFound($"File for audio ID {id} not found.");
             }
 
             // Read the file into a byte array
@@ -141,12 +142,12 @@ namespace HttpAudioControllers
             try {
                 fileData = await System.IO.File.ReadAllBytesAsync(filePath);
                 if(fileData.Length == 0){
-                Console.WriteLine($"File found but it is empty: {filePath}");
-                return NotFound();
+                    Console.WriteLine($"File found but it is empty: {filePath}");
+                    return NotFound($"File for audio ID {id} not found.");
                 }
-            } catch (IOException e){
+            } catch(IOException e){
                 return StatusCode(500, "I/O error occurred: " + e.Message);
-            } catch (Exception e){
+            } catch(Exception e){
                 return StatusCode(500, "An unexpected error occurred: " + e.Message);
             }
 
