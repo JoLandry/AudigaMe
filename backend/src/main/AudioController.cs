@@ -18,6 +18,16 @@ namespace HttpAudioControllers
         public bool? IsFavorite { get; set; }
     }
 
+    // Like Audio objects but with specific route for the controller
+    public class AudioMetadata
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? Artist { get; set; }
+        public string? Type { get; set; }
+        public string? DownloadUrl { get; set; }
+        public bool IsFavorite { get; set; }
+    }
 
     [ApiController]
     [Route("api/[controller]")]
@@ -185,13 +195,13 @@ namespace HttpAudioControllers
                 return NotFound("No audios found");
             }
 
-            var audioMetadataList = audios.Select(audio => new 
+            var audioMetadataList = audios.Select(audio => new AudioMetadata
             {
                 Id = audio.Id,
                 Title = audio.Title,
                 Artist = audio.Artist,
                 Type = audio.Type,
-                DownloadUrl = Url.Action(nameof(getAudioById), new { id = audio.Id }),
+                DownloadUrl = "/audios/" + audio.Id,
                 IsFavorite = audio.IsFavorite
             }).ToList();
 

@@ -157,9 +157,62 @@ public class testSuite {
     }
 
 
-    // Get audio list should return not found
+    [Fact]
+    public async Task GetAudioListShouldReturnSuccess()
+    {
+        // Arrange
+        var audioList = SetupMockAudioList();
 
-    // Get audio list should return success
+        _persistenceService.Setup(ps => ps.LoadAudioListAsync())
+            .ReturnsAsync(audioList);
+
+        var audioServiceMock = new Mock<IAudioService>();
+        audioServiceMock.Setup(s => s.getAudioList())
+            .ReturnsAsync(audioList);
+        var controller = new UserController(audioServiceMock.Object);
+
+        var urlMock = new Mock<IUrlHelper>();
+        urlMock
+            .Setup(h => h.Action(It.IsAny<Microsoft.AspNetCore.Mvc.Routing.UrlActionContext>()))
+            .Returns<Microsoft.AspNetCore.Mvc.Routing.UrlActionContext>(ctx => 
+            {
+                if(ctx.Values is Dictionary<string, object> values && values.ContainsKey("id")){
+                    return $"/audios/{values["id"]}";
+                }
+                return "/audios";
+            });
+
+        controller.Url = urlMock.Object;
+
+        // Act
+        var resultList = await controller.GetAudioList();
+
+        // Assert
+        Assert.IsType<OkObjectResult>(resultList);
+        var result = resultList as OkObjectResult;
+        Assert.NotNull(result);
+
+        var audioMetadataList = result.Value as List<AudioMetadata>;
+        Assert.NotNull(audioMetadataList);
+        Assert.Equal(audioList.Count,audioMetadataList.Count);
+
+        for(int i = 0; i < audioList.Count; i++){
+            var audio = audioList[i];
+            var metadataAudio = audioMetadataList[i];
+
+            Assert.Equal(audio.Id,metadataAudio.Id);
+            Assert.Equal(audio.Title,metadataAudio.Title);
+            Assert.Equal(audio.Artist,metadataAudio.Artist);
+            Assert.Equal(audio.Type,metadataAudio.Type);
+            Assert.Equal($"/audios/{audio.Id}",metadataAudio.DownloadUrl);
+            Assert.Equal(audio.IsFavorite,metadataAudio.IsFavorite);
+        }
+
+        CleanupMockFiles();
+    }
+
+
+    // Get audio list should return not found
 
     // Post audio should return failure for wrong mediatype
 
