@@ -2,6 +2,9 @@ using Xunit;
 using Moq;
 using Xunit.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System;
+using System.Diagnostics;
 using HttpAudioControllers;
 using AudioPersistenceService;
 using AudioUtils;
@@ -258,9 +261,165 @@ public class testSuite {
     }
 
 
-    // Post audio should return failure for wrong mediatype
+    [Fact]
+    public async Task PostAudioShouldReturnFailureForWrongMediaType()
+    {
+        // Arrange
+        var audio = new Audio
+        {
+            Id = 100,
+            Title = "InvalidAudio",
+            Artist = "RandomArtist",
+            Type = ".txt",
+            IsFavorite = false
+        };
 
-    // Post audio should return failure cuz wrong route
+        string rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..","..","..",".."));
+        string invalidFilePath = Path.Combine(rootDirectory,"backend","src","resources","uploads","InvalidAudio.txt");
+        await File.WriteAllTextAsync(invalidFilePath,"This is text for my test.");
+
+        // Act
+        using(var httpClient = new HttpClient()){
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(audio.Title),"Title");
+            formData.Add(new StringContent(audio.Artist),"Artist");
+            formData.Add(new StringContent(audio.Type),"Type");
+            formData.Add(new StringContent(audio.Id.ToString()), "Id");
+            formData.Add(new StringContent(audio.IsFavorite.ToString()), "False");
+
+            byte[] audioData = await System.IO.File.ReadAllBytesAsync(invalidFilePath);
+            formData.Add(new ByteArrayContent(audioData),"audioFile",Path.GetFileName(invalidFilePath));
+
+            var response = await httpClient.PostAsync("http://localhost:5174/api/user/audios/",formData);
+
+            // Assert
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest,response.StatusCode);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Response Body: {responseBody}");
+            Assert.Contains("Unsupported file type.", responseBody);
+        }
+        if(File.Exists(invalidFilePath)){
+            File.Delete(invalidFilePath);
+        }
+    }
+
+
+    [Fact]
+    public async Task PostAudioShouldReturnFailureDueToWrongRoute()
+    {
+        // Arrange
+        var audio = new Audio
+        {
+            Id = 500,
+            Title = "ValidAudio",
+            Artist = "TestArtist",
+            Type = ".mp3",
+            IsFavorite = false
+        };
+
+        string rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..","..","..",".."));
+        string validFilePath = Path.Combine(rootDirectory,"backend","src","resources","uploads","ValidAudio.mp3");
+        await File.WriteAllBytesAsync(validFilePath,new byte[]{1,2,3});
+
+        // Act
+        using(var httpClient = new HttpClient()){
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(audio.Title),"Title");
+            formData.Add(new StringContent(audio.Artist),"Artist");
+            formData.Add(new StringContent(audio.Type),"Type");
+            formData.Add(new StringContent(audio.Id.ToString()),"Id");
+            formData.Add(new StringContent(audio.IsFavorite.ToString()),"False");
+
+            byte[] audioData = await File.ReadAllBytesAsync(validFilePath);
+            formData.Add(new ByteArrayContent(audioData),"audioFile",Path.GetFileName(validFilePath));
+
+            var response = await httpClient.PostAsync("http://localhost:5174/wrongroute/",formData);
+
+            // Assert
+            Assert.Equal(System.Net.HttpStatusCode.MethodNotAllowed,response.StatusCode);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Response Body: {responseBody}");
+        }
+        if(File.Exists(validFilePath)){
+            File.Delete(validFilePath);
+        }
+    }
+
+
+    [Fact]
+    public async Task PostAudioShouldReturnSuccess()
+    {
+        // Arrange
+        var audio = new Audio
+        {
+            Id = 100,
+            Title = "validAudio",
+            Artist = "RandomArtist",
+            Type = ".mp3",
+            IsFavorite = false
+        };
+
+        string rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..","..","..",".."));
+        string validFilePath = Path.Combine(rootDirectory,"backend","src","resources","uploads","validAudio.mp3");
+        await File.WriteAllBytesAsync(validFilePath,new byte[]{1,2,3});
+
+        // Act
+        using(var httpClient = new HttpClient()){
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(audio.Title),"Title");
+            formData.Add(new StringContent(audio.Artist),"Artist");
+            formData.Add(new StringContent(audio.Type),"Type");
+            formData.Add(new StringContent(audio.Id.ToString()), "Id");
+            formData.Add(new StringContent(audio.IsFavorite.ToString()), "False");
+
+            byte[] audioData = await System.IO.File.ReadAllBytesAsync(validFilePath);
+            formData.Add(new ByteArrayContent(audioData),"audioFile",Path.GetFileName(validFilePath));
+
+            var response = await httpClient.PostAsync("http://localhost:5174/api/user/audios/",formData);
+
+            // Assert
+            Assert.Equal(System.Net.HttpStatusCode.Created,response.StatusCode);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Response Body: {responseBody}");
+
+            var returnedAudio = JsonConvert.DeserializeObject<Audio>(responseBody);
+            Assert.NotNull(returnedAudio);
+            Assert.Equal(audio.Title,returnedAudio.Title);
+            Assert.Equal(audio.Artist,returnedAudio.Artist);
+            Assert.Equal(audio.Type,returnedAudio.Type);
+
+            // Clean up test's modifications by executing DELETE 
+            if(returnedAudio?.Id != null){
+                string command = "curl";
+                string arguments = " -X DELETE http://localhost:5174/api/user/audios/" + returnedAudio.Id;
+
+                ProcessStartInfo processStartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process? process = Process.Start(processStartInfo);
+                if(process != null){
+                    try {
+                        using(System.IO.StreamReader reader = process.StandardOutput){
+                            string output = reader.ReadToEnd();
+                            Console.WriteLine("Output: " + output);
+                        }
+                    } finally {
+                        process.Dispose();
+                    }
+                }
+            }
+        }
+        if(File.Exists(validFilePath)){
+            File.Delete(validFilePath);
+        }
+    }
 
     // Change favorite status should return success
 

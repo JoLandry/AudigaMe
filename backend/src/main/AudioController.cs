@@ -80,7 +80,8 @@ namespace HttpAudioControllers
                     Console.WriteLine("Uploaded file successfully!");
                 }
                 else {
-                    Console.WriteLine($"Error uploading file: {response.StatusCode}");
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error uploading file: {response.StatusCode}. Message: {responseBody}");
                 }
             }
         }
@@ -93,6 +94,10 @@ namespace HttpAudioControllers
             // Check if audioFile has content
             if(audioFile == null || audioFile.Length == 0){
                 return BadRequest("The file could not be uploaded.");
+            }
+            // Check if title and artist are present
+            if(string.IsNullOrEmpty(title) || string.IsNullOrEmpty(artist)){
+                return BadRequest("Title and Artist are required.");
             }
             // Check if the media type is valid
             string fileExtension = Path.GetExtension(audioFile.FileName);
