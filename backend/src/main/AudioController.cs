@@ -224,8 +224,10 @@ namespace HttpAudioControllers
                 }
                 // For the moment, onyl update if an audio is in the Favorites
                 // Maybe later, the list of Strings reflecting the playlists it's in etc.
-                if(updateRequest.IsFavorite.HasValue){
+                if(updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool))){
                     audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
+                } else {
+                    return BadRequest($"Audio with id {id} should either be in the Favorites playlist or not.");
                 }
 
                 await _audioService.SaveAsync(audioToUpdate);

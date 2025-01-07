@@ -421,16 +421,88 @@ public class testSuite {
         }
     }
 
+
+    [Fact]
+    public async Task UpdateAudioShouldReturnBadRequestSinceNoBoolean()
+    {
+        // Arrange
+        int id = 1;
+
+        var requestPUT = new UpdateAudioRequest {
+            Title = "Whatever",
+            Artist = "Whoever"
+        };
+
+        var audioList = SetupMockAudioList();
+
+        _persistenceService.Setup(ps => ps.LoadAudioListAsync())
+            .ReturnsAsync(audioList);
+
+        var audioServiceMock = new Mock<IAudioService>();
+        audioServiceMock.Setup(s => s.retrieveAudioById(id))
+            .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == id));
+        var controller = new UserController(audioServiceMock.Object);
+
+        // Act
+        var result = await controller.UpdateAudio(id,requestPUT);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+        var reqResult = result as BadRequestObjectResult;
+        Assert.NotNull(reqResult);
+        Assert.Equal($"Audio with id {id} should either be in the Favorites playlist or not.",reqResult.Value);
+
+        CleanupMockFiles();
+    }
+
+
     // Change favorite status should return success
+    [Fact]
+    public async Task UpdateAudioShouldReturnSuccess()
+    {
+        // Arrange
+        int id = 1;
 
-    // Change favorite status should return failure cuz not boolean
+        var requestPUT = new UpdateAudioRequest {
+            Title = "Whatever",
+            Artist = "Whoever",
+            IsFavorite = true
+        };
 
+        var audioList = SetupMockAudioList();
+
+        _persistenceService.Setup(ps => ps.LoadAudioListAsync())
+            .ReturnsAsync(audioList);
+
+        var audioServiceMock = new Mock<IAudioService>();
+        audioServiceMock.Setup(s => s.retrieveAudioById(id))
+            .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == id));
+        var controller = new UserController(audioServiceMock.Object);
+
+        // Act
+        var result = await controller.UpdateAudio(id,requestPUT);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result);
+        var reqResult = result as OkObjectResult;
+        Assert.NotNull(reqResult);
+        var audioObject = reqResult.Value as Audio;
+        if(audioObject != null){
+            Assert.Equal(requestPUT.IsFavorite,audioObject.IsFavorite);
+        }
+
+        CleanupMockFiles();
+    }
+    
+
+    // WHEN IMPLEMENTED, ADD THE FOLLOWING TESTS
     // Get list of favorites should return success
-
     // Get playlist should return success
-
     // Playlist is correctly formed 
 
+
+
+    // Utils methods
     private List<Audio> SetupMockAudioList()
     {
         var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..","..","..",".."));
