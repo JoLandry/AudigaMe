@@ -50,13 +50,6 @@ namespace HttpAudioControllers
             }
         }
 
-        [HttpGet]
-        [Route("/")]
-        public Task<string> basicGetRequest()
-        {
-            return Task.FromResult("Hello World! Welcome to AudigaMe!");
-        }
-
 
         // Send POST request
         public async Task sendPostForAudio(Audio audio, string path)
