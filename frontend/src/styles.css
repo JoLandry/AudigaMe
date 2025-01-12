@@ -1,1 +1,66 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --background: #202124;
+    --overlay: #f9f9f97e;
+    --img-margin: .8vw;
+    --secondary-color: #222222;
+    --header_h: 7.5vh;
+    --img_select_width: 60vw;
+    --img-view-w: 75vw;
+    --text-light: #E0E0E0;
+    --text-white: #FFFFFF;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text-light);
+    padding-top: var(--header_h);
+    font-family: Arial, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+  
+#top-navbar {
+    height: var(--header_h);
+    background-color: var(--secondary-color);
+    box-shadow: 0 0 .7vh 0 #81808094;
+    border-bottom-style: solid;
+    border-bottom-width: .1vh;
+    border-bottom-color: rgb(110, 112, 114);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+    color: var(--text-white);
+}
+
+.logo {
+    cursor: pointer;
+    position: absolute;
+    height: calc(var(--header_h)/1.5);
+    max-width: 25vw;
+    margin-top: calc(var(--header_h)/6);
+    left: 50%;
+    transform: translateX(-50%);
+}
+  
+.rightmost-features {
+    cursor: pointer;
+    list-style-type: none;
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 1vw;
+    width: fit-content;
+    height: var(--header_h);
+    align-items: center;
+    gap: 2vw;
+}
+
+.feature {
+    height: calc(var(--header_h)/2);
+    max-width: var(--header_h);
+}
+  
