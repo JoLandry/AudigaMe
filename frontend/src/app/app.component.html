@@ -1,8 +1,20 @@
 <nav id="top-navbar">
 
+  <ul class="leftmost-features">
+    <li>
+      <div class="search-bar">
+        <input type="text" placeholder="Search..." />
+        <img src="/loupe.png" title="Search" class="search-icon" />
+      </div>
+    </li>
+  </ul>
+
   <img src="/logo.png" class="logo" type="image/png">
 
   <ul class="rightmost-features">
+    <li>
+      <img src="/home.png" title="Home" class="feature" type="image/png">
+    </li>
     <li>
       <img src="/heart.png" title="Favorites" class="feature" type="image/png">
     </li>
@@ -10,10 +22,25 @@
       <img src="/upload.png" title="Upload audio" class="feature" type="image/png">
     </li>
     <li>
-      <img src="/loupe.png" title="Search for audio" class="feature" type="image/png">
+      <img src="/settings.png" title="Settings" class="feature" type="image/png">
     </li>
   </ul>
 
+</nav>
+
+<nav id="side-navbar">
+  <a  class="side-nav-item">
+    All of my playlists
+  </a>
+  <a  class="side-nav-item">
+    Playlist - Name of the first playlist
+  </a>
+  <a  class="side-nav-item">
+    Playlist - Name of the second playlist
+  </a>
+  <a  class="side-nav-item">
+    Playlist - Name of the third playlist
+  </a>
 </nav>
 
 <router-outlet></router-outlet>

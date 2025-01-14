@@ -9,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
-  title = 'Ca rap du fromage par ici'
+  title = 'Home'
 }
