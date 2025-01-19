@@ -144,3 +144,53 @@ body {
     cursor: pointer;
     margin-left: 0.5vw; /* Small margin between icon and input */
 }
+
+.audioList {
+    width: calc(50vw - 2vw);
+    display: flex;
+    flex-direction: column; /* Display items vertically */
+    margin: calc(var(--header_h) * 1.7) auto 0 auto;
+    padding: 1vw;
+    gap: 1.5vh;
+    position: relative;
+}
+  
+.audio-container {
+    display: flex;
+    flex-direction: column; /* Display text vertically */
+    align-items: center;
+    text-align: center;
+    background-color: var(--secondary-color);
+    padding: 1vw;
+    box-shadow: 0 0 0.5vh 0 #81808094;
+    color: var(--text-light);
+}
+  
+.audio-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+  
+.audio-artist {
+    font-size: 1rem;
+    color: var(--text-white);
+}
+  
+.audio-info {
+    font-size: 0.9rem;
+    margin-top: 0.5vh;
+}
+  
+button {
+    margin-top: 1vh;
+    padding: 0.5vh 1vw;
+    background-color: var(--background);
+    color: var(--text-white);
+    border: 1px solid var(--text-light);
+    cursor: pointer;
+}
+  
+button:hover {
+    background-color: var(--text-light);
+    color: var(--background);
+}
