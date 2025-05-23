@@ -15,12 +15,16 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-try {
+try
+{
     var audioServices = app.Services.GetRequiredService<IAudioService>();
-    if(audioServices is AudioServices audioServicesInstance){
+    if(audioServices is AudioServices audioServicesInstance)
+    {
         await audioServicesInstance.InitializeAsync();
     }
-} catch(Exception e){
+}
+catch(Exception e)
+{
     Console.WriteLine($"Error initializing audio services: {e.Message}");
 }
 

@@ -20,6 +20,7 @@ namespace AudioObjects
         public byte[] Data {get;set;} = Array.Empty<byte>();
         public string Type {get;set;} = string.Empty;
         public int Id {get;set;}
+        public int Size {get;set;}
         public bool IsFavorite {get;set;}
 
 
@@ -31,6 +32,7 @@ namespace AudioObjects
             Type = type;
             Path = "/resources/audios/" + title + type;
             Data = data;
+            Size = data.Length;
             IsFavorite = false;
         }
         
@@ -43,7 +45,8 @@ namespace AudioObjects
         // or when their id is the same
         public override bool Equals(object? o)
         {
-            if(o == null || GetType() != o.GetType()){
+            if(o == null || GetType() != o.GetType())
+            {
                 return false;
             }
             Audio otherAudio = (Audio)o;

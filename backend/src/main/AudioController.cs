@@ -26,6 +26,7 @@ namespace HttpAudioControllers
         public string? Artist { get; set; }
         public string? Type { get; set; }
         public string? DownloadUrl { get; set; }
+        public int Size { get; set; }
         public bool IsFavorite { get; set; }
     }
 
@@ -42,10 +43,13 @@ namespace HttpAudioControllers
 
         public async Task<IActionResult> InitializeAudioService()
         {
-            try {
+            try
+            {
                 await _audioService.InitializeAsync();
                 return Ok("Audio service initialized successfully.");
-            } catch(Exception ex){
+            }
+            catch(Exception ex)
+            {
                 return StatusCode(500, "Error initializing audio service: " + ex.Message);
             }
         }
@@ -62,6 +66,7 @@ namespace HttpAudioControllers
                 formData.Add(new StringContent(audio.Artist), "Artist");
                 formData.Add(new StringContent(audio.Type), "Type");
                 formData.Add(new StringContent(audio.Id.ToString()), "Id");
+                formData.Add(new StringContent(audio.Size.ToString()), "Size");
                 formData.Add(new StringContent(audio.IsFavorite.ToString()), "False");
 
                 byte[] audioData = await System.IO.File.ReadAllBytesAsync(path);
@@ -69,10 +74,12 @@ namespace HttpAudioControllers
 
                 var response = await httpClient.PostAsync("http://localhost:5174/audios/",formData);
 
-                if(response.IsSuccessStatusCode){
+                if(response.IsSuccessStatusCode)
+                {
                     Console.WriteLine("Uploaded file successfully!");
                 }
-                else {
+                else
+                {
                     var responseBody = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"Error uploading file: {response.StatusCode}. Message: {responseBody}");
                 }
@@ -85,16 +92,19 @@ namespace HttpAudioControllers
         public async Task<IActionResult> uploadAudio([FromForm] IFormFile audioFile, [FromForm] string title, [FromForm] string artist)
         {
             // Check if audioFile has content
-            if(audioFile == null || audioFile.Length == 0){
+            if(audioFile == null || audioFile.Length == 0)
+            {
                 return BadRequest("The file could not be uploaded.");
             }
             // Check if title and artist are present
-            if(string.IsNullOrEmpty(title) || string.IsNullOrEmpty(artist)){
+            if(string.IsNullOrEmpty(title) || string.IsNullOrEmpty(artist))
+            {
                 return BadRequest("Title and Artist are required.");
             }
             // Check if the media type is valid
             string fileExtension = Path.GetExtension(audioFile.FileName);
-            if(fileExtension != ".mp3" && fileExtension != ".wav"){
+            if(fileExtension != ".mp3" && fileExtension != ".wav")
+            {
                 return BadRequest("Unsupported file type.");
             }
 
@@ -106,7 +116,8 @@ namespace HttpAudioControllers
                 fileData = memoryStream.ToArray();
             }
 
-            try {
+            try
+            {
                 var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
                 // Save the file
                 string newFileName = $"{title}{fileExtension}";
@@ -122,7 +133,9 @@ namespace HttpAudioControllers
                 Console.WriteLine($"Audio added with ID: {newAudio.Id}, Title: {newAudio.Title}, Artist: {newAudio.Artist}");
 
                 return CreatedAtAction(nameof(getAudioById), new { id = newAudio.Id },newAudio);
-            } catch (Exception e){
+            }
+            catch (Exception e)
+            {
                 return StatusCode(500, "Internal server error: " + e.Message);
             }
         }
@@ -133,7 +146,8 @@ namespace HttpAudioControllers
         public async Task<IActionResult> getAudioById(int id)
         {
             var audioToRetrieve = await _audioService.retrieveAudioById(id);
-            if(audioToRetrieve == null){
+            if(audioToRetrieve == null)
+            {
                 return NotFound($"Audio with ID {id} not found.");
             }
 
@@ -141,21 +155,28 @@ namespace HttpAudioControllers
             var uploadsDirectory = Path.Combine(rootDirectory,"backend","src","resources","uploads");
             string filePath = Path.Combine(uploadsDirectory,$"{audioToRetrieve.Title}{audioToRetrieve.Type}");
 
-            if(!System.IO.File.Exists(filePath)){
+            if(!System.IO.File.Exists(filePath))
+            {
                 return NotFound($"File for audio ID {id} not found.");
             }
 
             // Read the file into a byte array
             byte[] fileData;
-            try {
+            try
+            {
                 fileData = await System.IO.File.ReadAllBytesAsync(filePath);
-                if(fileData.Length == 0){
+                if(fileData.Length == 0)
+                {
                     Console.WriteLine($"File found but it is empty: {filePath}");
                     return NotFound($"File for audio ID {id} not found.");
                 }
-            } catch(IOException e){
+            }
+            catch(IOException e)
+            {
                 return StatusCode(500, "I/O error occurred: " + e.Message);
-            } catch(Exception e){
+            }
+            catch(Exception e)
+            {
                 return StatusCode(500, "An unexpected error occurred: " + e.Message);
             }
 
@@ -168,17 +189,32 @@ namespace HttpAudioControllers
         public async Task<IActionResult> DeleteAudio(int id)
         {
             Console.WriteLine("Entering DeleteAudio method\n");
-            try {
+            try
+            {
                 var audioToDelete = await _audioService.retrieveAudioById(id);
-                if(audioToDelete == null){
+                if(audioToDelete == null)
+                {
                     Console.WriteLine("Audio not found\n");
                     return NotFound($"Audio with id = {id} not found");
                 }
                 Console.WriteLine("Before remove method\n");
                 await _audioService.removeAudioFromList(audioToDelete);
+
+                // Delete the file itself from disk (since local server)
+                var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..", "..", "..", ".."));
+                var uploadsDirectory = Path.Combine(rootDirectory,"backend","src","resources","uploads");
+                string filePath = Path.Combine(uploadsDirectory,$"{audioToDelete.Title}{audioToDelete.Type}");
+
+                if(System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
                 Console.WriteLine("After remove method\n");
                 return NoContent();
-            } catch(Exception){
+            }
+            catch(Exception)
+            {
                 return StatusCode(StatusCodes.Status500InternalServerError,"Error when trying to delete data");
             }
         }
@@ -189,7 +225,8 @@ namespace HttpAudioControllers
         public async Task<IActionResult> GetAudioList()
         {
             var audios = await _audioService.getAudioList();
-            if(audios == null || audios.Count == 0){
+            if(audios == null || audios.Count == 0)
+            {
                 return NotFound("No audios found.");
             }
 
@@ -200,6 +237,7 @@ namespace HttpAudioControllers
                 Artist = audio.Artist,
                 Type = audio.Type,
                 DownloadUrl = "/audios/" + audio.Id,
+                Size = audio.Size,
                 IsFavorite = audio.IsFavorite
             }).ToList();
 
@@ -210,22 +248,40 @@ namespace HttpAudioControllers
         [HttpPut("audios/{id:int}")]
         public async Task<IActionResult> UpdateAudio(int id, [FromBody] UpdateAudioRequest updateRequest)
         {
-            try {
+            try
+            {
                 var audioToUpdate = await _audioService.retrieveAudioById(id);
-                if(audioToUpdate == null){
+                if(audioToUpdate == null)
+                {
                     return NotFound($"Audio with id = {id} not found");
                 }
-                // For the moment, onyl update if an audio is in the Favorites
+                // For the moment, only update if an audio is in the Favorites
                 // Maybe later, the list of Strings reflecting the playlists it's in etc.
-                if(updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool))){
+                if(updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool)))
+                {
+                    // isFavorite
                     audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
-                } else {
+                    // Title
+                    if(updateRequest.Title != null)
+                    {
+                        audioToUpdate.Title = updateRequest.Title;
+                    }
+                    // Artist
+                    if(updateRequest.Artist != null)
+                    {
+                        audioToUpdate.Artist = updateRequest.Artist;
+                    }
+                }
+                else
+                {
                     return BadRequest($"Audio with id {id} should either be in the Favorites playlist or not.");
                 }
 
                 await _audioService.SaveAsync(audioToUpdate);
                 return Ok(audioToUpdate);
-            } catch(Exception ex){
+            }
+            catch(Exception ex)
+            {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error updating the audio: " + ex.Message);
             }
         }
