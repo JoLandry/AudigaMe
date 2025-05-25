@@ -5,7 +5,19 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var metadataFilePath = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","audioMetadata.json");
+var metadataFilePath = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "audioMetadata.json");
+
+
+DotNetEnv.Env.Load();
+
+var host = Environment.GetEnvironmentVariable("DB_HOST");
+var user = Environment.GetEnvironmentVariable("DB_USER");
+var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
+var db = Environment.GetEnvironmentVariable("DB_NAME");
+var port = Environment.GetEnvironmentVariable("DB_PORT");
+
+var connectionString = $"Host={host};Username={user};Password={pass};Database={db};Port={port}";
+
 
 builder.Services.AddSingleton<IAudioPersistence>(_ => new AudioPersistence(metadataFilePath));
 builder.Services.AddSingleton<IAudioService, AudioServices>();
