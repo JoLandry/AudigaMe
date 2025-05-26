@@ -61,12 +61,12 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(invalidId))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(invalidId))
             .ReturnsAsync((Audio?)null);
         var controller = new UserController(audioServiceMock.Object);
 
         // Act
-        var result = await controller.getAudioById(invalidId);
+        var result = await controller.GetAudioById(invalidId);
 
         // Assert
         Assert.IsType<NotFoundObjectResult>(result);
@@ -90,12 +90,12 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(validId))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(validId))
             .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == validId));
         var controller = new UserController(audioServiceMock.Object);
 
         // Act
-        var result = await controller.getAudioById(validId);
+        var result = await controller.GetAudioById(validId);
 
         // Assert
         Assert.IsType<FileContentResult>(result);
@@ -118,7 +118,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.getAudioList())
+        audioServiceMock.Setup(s => s.GetAudioList())
             .ReturnsAsync(audioList);
         var controller = new UserController(audioServiceMock.Object);
 
@@ -143,7 +143,7 @@ public class testSuite {
         var result = resultList as OkObjectResult;
         Assert.NotNull(result);
 
-        var audioMetadataList = result.Value as List<AudioMetadata>;
+        var audioMetadataList = result.Value as List<Audio>;
         Assert.NotNull(audioMetadataList);
         Assert.Equal(audioList.Count,audioMetadataList.Count);
 
@@ -155,7 +155,6 @@ public class testSuite {
             Assert.Equal(audio.Title,metadataAudio.Title);
             Assert.Equal(audio.Artist,metadataAudio.Artist);
             Assert.Equal(audio.Type,metadataAudio.Type);
-            Assert.Equal($"/audios/{audio.Id}",metadataAudio.DownloadUrl);
             Assert.Equal(audio.IsFavorite,metadataAudio.IsFavorite);
         }
 
@@ -173,7 +172,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.getAudioList())
+        audioServiceMock.Setup(s => s.GetAudioList())
             .ReturnsAsync(audioList);
         var controller = new UserController(audioServiceMock.Object);
 
@@ -215,7 +214,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(invalidIdToDelete))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(invalidIdToDelete))
             .ReturnsAsync((Audio?)null);
         var controller = new UserController(audioServiceMock.Object);
 
@@ -244,7 +243,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(id))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(id))
             .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == id));
         var controller = new UserController(audioServiceMock.Object);
 
@@ -439,7 +438,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(id))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(id))
             .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == id));
         var controller = new UserController(audioServiceMock.Object);
 
@@ -475,7 +474,7 @@ public class testSuite {
             .ReturnsAsync(audioList);
 
         var audioServiceMock = new Mock<IAudioService>();
-        audioServiceMock.Setup(s => s.retrieveAudioById(id))
+        audioServiceMock.Setup(s => s.RetrieveAudioById(id))
             .ReturnsAsync(audioList.FirstOrDefault(a => a.Id == id));
         var controller = new UserController(audioServiceMock.Object);
 

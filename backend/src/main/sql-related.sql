@@ -1,9 +1,11 @@
 CREATE TABLE Audio (
-    id INT PRIMARY KEY,
-    title varchar(100),
-    artist varchar(100),
-    audioFormat varchar(10),
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100),
+    artist VARCHAR(100),
+    audioFormat VARCHAR(10),
     audioSize INT,
     isFavorite BOOLEAN
 );
+
+DROP TABLE Audio;
 

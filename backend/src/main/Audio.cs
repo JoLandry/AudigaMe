@@ -1,17 +1,5 @@
 namespace AudioObjects
 {
-    public interface IAudioService
-    {
-        Task InitializeAsync();
-        Task<List<Audio>> getAudioList();
-        Task<bool> addAudioToList(Audio audio);
-        Task removeAudioFromList(Audio audio);
-        Task<Audio?> retrieveAudioById(int id);
-        Task SaveAsync(Audio audio);
-        Task SaveAudioListAsync();
-    }
-
-
     public class Audio
     {
         public string Title {get;set;} = string.Empty;
@@ -26,11 +14,9 @@ namespace AudioObjects
 
         public Audio(string title, string artist, byte[] data, string type)
         {
-            Id = new Random().Next(1,100000);
             Title = title;
             Artist = artist;
             Type = type;
-            Path = "/resources/audios/" + title + type;
             Data = data;
             Size = data.Length;
             IsFavorite = false;

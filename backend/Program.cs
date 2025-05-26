@@ -1,12 +1,8 @@
-using AudioObjects;
 using AudioUtils;
 using AudioPersistenceService;
-using System.IO;
+
 
 var builder = WebApplication.CreateBuilder(args);
-
-var metadataFilePath = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "audioMetadata.json");
-
 
 DotNetEnv.Env.Load();
 
@@ -19,7 +15,7 @@ var port = Environment.GetEnvironmentVariable("DB_PORT");
 var connectionString = $"Host={host};Username={user};Password={pass};Database={db};Port={port}";
 
 
-builder.Services.AddSingleton<IAudioPersistence>(_ => new AudioPersistence(metadataFilePath));
+builder.Services.AddSingleton<IAudioPersistence>(_ => new AudioPersistence(connectionString));
 builder.Services.AddSingleton<IAudioService, AudioServices>();
 
 builder.Services.AddControllers();

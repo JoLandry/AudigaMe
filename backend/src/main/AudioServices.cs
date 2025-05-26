@@ -5,7 +5,19 @@ using System.Threading.Tasks;
 
 namespace AudioUtils
 {
-    public class AudioServices: IAudioService
+    
+    public interface IAudioService
+    {
+        Task InitializeAsync();
+        Task<List<Audio>> GetAudioList();
+        Task<bool> AddAudioToList(Audio audio);
+        Task RemoveAudioFromList(Audio audio);
+        Task<Audio?> RetrieveAudioById(int id);
+        Task SaveAsync(Audio audio);
+        Task SaveAudioListAsync();
+    }
+    
+    public class AudioServices : IAudioService
     {
         private List<Audio> audioList;
         private readonly IAudioPersistence _persistenceService;
@@ -16,57 +28,57 @@ namespace AudioUtils
             audioList = new List<Audio>();
         }
 
+        public AudioServices()
+        {
+            audioList = new List<Audio>();
+            _persistenceService = new AudioPersistence();
+        }
+
         public async Task InitializeAsync()
         {
             await LoadAudioListAsync();
         }
 
-        public Task<List<Audio>> getAudioList()
+        public Task<List<Audio>> GetAudioList()
         {
             return Task.FromResult(audioList);
         }
 
-        public async Task<bool> addAudioToList(Audio audio)
+        public async Task<bool> AddAudioToList(Audio audio)
         {
             // Check if the element (Audio object) is already in the list
-            foreach(Audio audioCmp in audioList)
+            foreach (Audio audioCmp in audioList)
             {
-                if(audioCmp.Equals(audio))
+                if (audioCmp.Equals(audio))
                 {
                     return false;
                 }
             }
+            audio.Id = await _persistenceService.SaveAndReturnIdAsync(audio);
             audioList.Add(audio);
-            await SaveAudioListAsync();
+
             return true;
         }
 
-        public async Task removeAudioFromList(Audio audio)
+        public async Task RemoveAudioFromList(Audio audio)
         {
             var audioToRemove = audioList.FirstOrDefault(a => a.Id == audio.Id);
-            if(audioToRemove != null)
+            if (audioToRemove != null)
             {
+                await _persistenceService.DeleteAudioAsync(audioToRemove);
                 audioList.Remove(audioToRemove);
-                await SaveAudioListAsync();
             }
         }
 
-        public async Task<Audio?> retrieveAudioById(int id)
+        public async Task<Audio?> RetrieveAudioById(int id)
         {
-            List<Audio> listOfAudios = await getAudioList();
+            List<Audio> listOfAudios = await GetAudioList();
             return listOfAudios.FirstOrDefault(audio => audio.Id == id);
         }
 
         public async Task SaveAsync(Audio audio)
         {
-            var existingAudio = audioList.FirstOrDefault(a => a.Id == audio.Id);
-            if(existingAudio != null)
-            {
-                existingAudio.Title = audio.Title;
-                existingAudio.Artist = audio.Artist;
-                existingAudio.IsFavorite = audio.IsFavorite;
-            }
-            await SaveAudioListAsync();
+            await _persistenceService.UpdateAudioAsync(audio);
         }
 
         public async Task SaveAudioListAsync()

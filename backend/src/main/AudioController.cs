@@ -18,24 +18,11 @@ namespace HttpAudioControllers
         public bool? IsFavorite { get; set; }
     }
 
-    // Like Audio objects but with specific route for the controller
-    public class AudioMetadata
-    {
-        public int Id { get; set; }
-        public string? Title { get; set; }
-        public string? Artist { get; set; }
-        public string? Type { get; set; }
-        public string? DownloadUrl { get; set; }
-        public int Size { get; set; }
-        public bool IsFavorite { get; set; }
-    }
-
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IAudioService _audioService;
-
         public UserController(IAudioService audioService)
         {
             _audioService = audioService;
@@ -89,7 +76,7 @@ namespace HttpAudioControllers
 
         // Handle POST request
         [HttpPost("audios")]
-        public async Task<IActionResult> uploadAudio([FromForm] IFormFile audioFile, [FromForm] string title, [FromForm] string artist)
+        public async Task<IActionResult> UploadAudio([FromForm] IFormFile audioFile, [FromForm] string title, [FromForm] string artist)
         {
             // Check if audioFile has content
             if(audioFile == null || audioFile.Length == 0)
@@ -97,7 +84,7 @@ namespace HttpAudioControllers
                 return BadRequest("The file could not be uploaded.");
             }
             // Check if title and artist are present
-            if(string.IsNullOrEmpty(title) || string.IsNullOrEmpty(artist))
+            if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(artist))
             {
                 return BadRequest("Title and Artist are required.");
             }
@@ -115,24 +102,38 @@ namespace HttpAudioControllers
                 await audioFile.CopyToAsync(memoryStream);
                 fileData = memoryStream.ToArray();
             }
+            
+            // Create a new Audio object
+            var newAudio = new Audio
+            {
+                Title = title,
+                Artist = artist,
+                Type = fileExtension,
+                Size = fileData.Length,
+                IsFavorite = false
+            };
 
             try
             {
-                var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(),"src","resources","uploads");
-                // Save the file
-                string newFileName = $"{title}{fileExtension}";
-                var filePath = Path.Combine(uploadsDirectory,newFileName);
-                using(var stream = new FileStream(filePath,FileMode.Create,FileAccess.Write)){
-                    await audioFile.CopyToAsync(stream);
+                // Save audio metadata to DB and generate ID
+                bool addedSuccessfully = await _audioService.AddAudioToList(newAudio);
+                if (!addedSuccessfully)
+                {
+                    return Conflict("This audio file already exists.");
                 }
 
-                // Create a new Audio object
-                var newAudio = new Audio(title,artist,fileData,fileExtension);
-                await _audioService.addAudioToList(newAudio);
-
+                // Save the file to disk (local server)
+                var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "uploads");
+                string newFileName = $"{newAudio.Id}{fileExtension}";
+                var filePath = Path.Combine(uploadsDirectory, newFileName);
+                using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                {
+                    await audioFile.CopyToAsync(stream);
+                }
+                
                 Console.WriteLine($"Audio added with ID: {newAudio.Id}, Title: {newAudio.Title}, Artist: {newAudio.Artist}");
 
-                return CreatedAtAction(nameof(getAudioById), new { id = newAudio.Id },newAudio);
+                return CreatedAtAction(nameof(GetAudioById), new { id = newAudio.Id }, newAudio);
             }
             catch (Exception e)
             {
@@ -143,9 +144,9 @@ namespace HttpAudioControllers
 
         [HttpGet]
         [Route("/audios/{id}")]
-        public async Task<IActionResult> getAudioById(int id)
+        public async Task<IActionResult> GetAudioById(int id)
         {
-            var audioToRetrieve = await _audioService.retrieveAudioById(id);
+            var audioToRetrieve = await _audioService.RetrieveAudioById(id);
             if(audioToRetrieve == null)
             {
                 return NotFound($"Audio with ID {id} not found.");
@@ -153,7 +154,7 @@ namespace HttpAudioControllers
 
             var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..", "..", "..", ".."));
             var uploadsDirectory = Path.Combine(rootDirectory,"backend","src","resources","uploads");
-            string filePath = Path.Combine(uploadsDirectory,$"{audioToRetrieve.Title}{audioToRetrieve.Type}");
+            string filePath = Path.Combine(uploadsDirectory,$"{id}{audioToRetrieve.Type}");
 
             if(!System.IO.File.Exists(filePath))
             {
@@ -188,29 +189,27 @@ namespace HttpAudioControllers
         [HttpDelete("audios/{id:int}")]
         public async Task<IActionResult> DeleteAudio(int id)
         {
-            Console.WriteLine("Entering DeleteAudio method\n");
             try
             {
-                var audioToDelete = await _audioService.retrieveAudioById(id);
+                var audioToDelete = await _audioService.RetrieveAudioById(id);
                 if(audioToDelete == null)
                 {
                     Console.WriteLine("Audio not found\n");
                     return NotFound($"Audio with id = {id} not found");
                 }
                 Console.WriteLine("Before remove method\n");
-                await _audioService.removeAudioFromList(audioToDelete);
+                await _audioService.RemoveAudioFromList(audioToDelete);
 
                 // Delete the file itself from disk (since local server)
                 var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..", "..", "..", ".."));
                 var uploadsDirectory = Path.Combine(rootDirectory,"backend","src","resources","uploads");
-                string filePath = Path.Combine(uploadsDirectory,$"{audioToDelete.Title}{audioToDelete.Type}");
+                string filePath = Path.Combine(uploadsDirectory,$"{id}{audioToDelete.Type}");
 
                 if(System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
                 }
 
-                Console.WriteLine("After remove method\n");
                 return NoContent();
             }
             catch(Exception)
@@ -224,19 +223,18 @@ namespace HttpAudioControllers
         [Route("/audios")]
         public async Task<IActionResult> GetAudioList()
         {
-            var audios = await _audioService.getAudioList();
+            var audios = await _audioService.GetAudioList();
             if(audios == null || audios.Count == 0)
             {
                 return NotFound("No audios found.");
             }
 
-            var audioMetadataList = audios.Select(audio => new AudioMetadata
+            var audioMetadataList = audios.Select(audio => new Audio
             {
                 Id = audio.Id,
                 Title = audio.Title,
                 Artist = audio.Artist,
                 Type = audio.Type,
-                DownloadUrl = "/audios/" + audio.Id,
                 Size = audio.Size,
                 IsFavorite = audio.IsFavorite
             }).ToList();
@@ -250,34 +248,33 @@ namespace HttpAudioControllers
         {
             try
             {
-                var audioToUpdate = await _audioService.retrieveAudioById(id);
+                var audioToUpdate = await _audioService.RetrieveAudioById(id);
                 if(audioToUpdate == null)
                 {
                     return NotFound($"Audio with id = {id} not found");
                 }
-                // For the moment, only update if an audio is in the Favorites
-                // Maybe later, the list of Strings reflecting the playlists it's in etc.
-                if(updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool)))
+                // Update if Title, Artist or IsFavorite changes
+                if (updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool)))
                 {
                     // isFavorite
                     audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
                     // Title
-                    if(updateRequest.Title != null)
+                    if (updateRequest.Title != null)
                     {
                         audioToUpdate.Title = updateRequest.Title;
                     }
                     // Artist
-                    if(updateRequest.Artist != null)
+                    if (updateRequest.Artist != null)
                     {
                         audioToUpdate.Artist = updateRequest.Artist;
                     }
+                    await _audioService.SaveAsync(audioToUpdate);
                 }
                 else
                 {
                     return BadRequest($"Audio with id {id} should either be in the Favorites playlist or not.");
                 }
 
-                await _audioService.SaveAsync(audioToUpdate);
                 return Ok(audioToUpdate);
             }
             catch(Exception ex)
