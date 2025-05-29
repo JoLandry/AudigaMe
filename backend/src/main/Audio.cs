@@ -2,12 +2,11 @@ namespace AudioObjects
 {
     public class Audio
     {
-        public string Title {get;set;} = string.Empty;
+        public int Id {get;set;}
+        public string Title { get; set; } = string.Empty;
         public string Artist {get;set;} = string.Empty;
-        public string Path {get;set;} = string.Empty;
         public byte[] Data {get;set;} = Array.Empty<byte>();
         public string Type {get;set;} = string.Empty;
-        public int Id {get;set;}
         public int Size {get;set;}
         public bool IsFavorite {get;set;}
 
@@ -36,7 +35,9 @@ namespace AudioObjects
                 return false;
             }
             Audio otherAudio = (Audio)o;
-            return Id == otherAudio.Id;
+            return Id == otherAudio.Id ||
+                (Title == otherAudio.Title &&
+                Artist == otherAudio.Artist);
         }
 
         public override int GetHashCode()

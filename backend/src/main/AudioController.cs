@@ -1,12 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.IO;
 using AudioObjects;
-using AudioPersistenceService;
 using AudioUtils;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace HttpAudioControllers
 {
@@ -124,6 +118,12 @@ namespace HttpAudioControllers
 
                 // Save the file to disk (local server)
                 var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "src", "resources", "uploads");
+
+                if (!Directory.Exists(uploadsDirectory))
+                {
+                    Directory.CreateDirectory(uploadsDirectory);
+                }
+                
                 string newFileName = $"{newAudio.Id}{fileExtension}";
                 var filePath = Path.Combine(uploadsDirectory, newFileName);
                 using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
@@ -194,10 +194,8 @@ namespace HttpAudioControllers
                 var audioToDelete = await _audioService.RetrieveAudioById(id);
                 if(audioToDelete == null)
                 {
-                    Console.WriteLine("Audio not found\n");
                     return NotFound($"Audio with id = {id} not found");
                 }
-                Console.WriteLine("Before remove method\n");
                 await _audioService.RemoveAudioFromList(audioToDelete);
 
                 // Delete the file itself from disk (since local server)
@@ -254,10 +252,14 @@ namespace HttpAudioControllers
                     return NotFound($"Audio with id = {id} not found");
                 }
                 // Update if Title, Artist or IsFavorite changes
-                if (updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool)))
+                if (updateRequest.IsFavorite.HasValue && (updateRequest.IsFavorite.Value.GetType() == typeof(bool)) ||
+                    updateRequest.Title != null || updateRequest.Artist != null)
                 {
                     // isFavorite
-                    audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
+                    if (updateRequest.IsFavorite != null)
+                    {
+                        audioToUpdate.IsFavorite = updateRequest.IsFavorite.Value;
+                    }
                     // Title
                     if (updateRequest.Title != null)
                     {
@@ -272,7 +274,7 @@ namespace HttpAudioControllers
                 }
                 else
                 {
-                    return BadRequest($"Audio with id {id} should either be in the Favorites playlist or not.");
+                    return BadRequest($"Audio with id {id} should have a field to be modified");
                 }
 
                 return Ok(audioToUpdate);
