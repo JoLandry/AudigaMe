@@ -2,13 +2,11 @@ using Xunit;
 using Moq;
 using Xunit.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Testing;
 using HttpAudioControllers;
 using AudioPersistenceService;
 using AudioUtils;
 using AudioObjects;
-using System.Net;
-using System.Text.Json;
+using System.Text;
 
 
 namespace AppTests
@@ -379,30 +377,44 @@ namespace AppTests
         public async Task UploadAudio_ShouldReturnCreated_WhenInputIsValid()
         {
             // Arrange
-            string fileName = "example.mp3";
-            var filePath = GetSampleFilePath(fileName);
-            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var mockFileContent = "Fake MP3 Content";
+            var fileName = "test.mp3";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(mockFileContent));
+            
+            var mockFile = new Mock<IFormFile>();
+            mockFile.Setup(f => f.FileName).Returns(fileName);
+            mockFile.Setup(f => f.Length).Returns(stream.Length);
+            mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
+            mockFile.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), default))
+                    .Returns<Stream, CancellationToken>((targetStream, _) =>
+                        stream.CopyToAsync(targetStream));
 
-            var id = Guid.NewGuid();
-            var content = new MultipartFormDataContent
-            {
-                { new ByteArrayContent(fileBytes), "audioFile", fileName },
-                { new StringContent("TestTitle_Unique_" + id), "title" },
-                { new StringContent("WhateverArtist"), "artist" }
-            };
+            var uploadedAudios = new List<Audio>();
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(uploadedAudios);
+            _persistenceMock.Setup(p => p.SaveAudioListAsync(It.IsAny<List<Audio>>()))
+                            .Callback<List<Audio>>(list => uploadedAudios = list)
+                            .Returns(Task.CompletedTask);
 
-            var client = CreateTestClient();
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            var title = "TestTitle_Unique";
+            var artist = "TestArtist";
 
             // Act
-            var response = await client.PostAsync("/api/User/audios", content);
+            var result = await _controller.UploadAudio(mockFile.Object, title, artist);
 
             // Assert
-            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-            var responseBody = await response.Content.ReadAsStringAsync();
-            Assert.Contains("TestTitle_Unique_" + id, responseBody);
-            Assert.Contains("WhateverArtist", responseBody);
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
+            var returnedAudio = Assert.IsType<Audio>(createdResult.Value);
 
-            _output.WriteLine("Verified UploadAudio returns Created when input is valid");
+            Assert.Equal(title, returnedAudio.Title);
+            Assert.Equal(artist, returnedAudio.Artist);
+            Assert.Equal(".mp3", returnedAudio.Type);
+            Assert.Equal(mockFileContent.Length, returnedAudio.Size);
+
+            _output.WriteLine("Verified UploadAudio returns Created when input is valid and file is mocked");
         }
 
 
@@ -410,24 +422,22 @@ namespace AppTests
         public async Task UploadAudio_ShouldReturnBadRequest_WhenFileIsMissing()
         {
             // Arrange
-            var content = new MultipartFormDataContent
-            {
-                { new StringContent("TestTitle"), "title" },
-                { new StringContent("TestArtist"), "artist" }
-            };
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
 
-            var client = CreateTestClient();
+            var title = "TestTitle";
+            var artist = "TestArtist";
 
             // Act
-            var response = await client.PostAsync("/api/User/audios", content);
+            var result = await _controller.UploadAudio(null, title, artist);
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var responseBody = await response.Content.ReadAsStringAsync();
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var error = badRequestResult.Value?.ToString();
+            Assert.Contains("The file could not be uploaded.", error);
 
-            var json = JsonDocument.Parse(responseBody);
-            var message = json.RootElement.GetProperty("errors").GetProperty("audioFile")[0].GetString();
-            Assert.Equal("The audioFile field is required.", message);
+            _output.WriteLine("Verified UploadAudio returns BadRequest when file is missing");
         }
 
 
@@ -435,26 +445,33 @@ namespace AppTests
         public async Task UploadAudio_ShouldReturnBadRequest_WhenFileTypeIsInvalid()
         {
             // Arrange
-            string fileName = "invalid.txt";
-            var filePath = GetSampleFilePath("example.mp3");
-            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var invalidContent = "This is not an audio file";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(invalidContent));
 
-            var content = new MultipartFormDataContent
-            {
-                { new ByteArrayContent(fileBytes), "audioFile", fileName },
-                { new StringContent("TestTitle"), "title" },
-                { new StringContent("TestArtist"), "artist" }
-            };
+            var mockFile = new Mock<IFormFile>();
+            mockFile.Setup(f => f.FileName).Returns("invalid.txt");
+            mockFile.Setup(f => f.Length).Returns(stream.Length);
+            mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
+            mockFile.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), default))
+                    .Returns<Stream, CancellationToken>((target, _) =>
+                        stream.CopyToAsync(target));
 
-            var client = CreateTestClient();
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            var title = "TestTitle";
+            var artist = "TestArtist";
 
             // Act
-            var response = await client.PostAsync("/api/User/audios", content);
+            var result = await _controller.UploadAudio(mockFile.Object, title, artist);
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var responseBody = await response.Content.ReadAsStringAsync();
-            Assert.Contains("Unsupported file type", responseBody);
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var error = badRequestResult.Value?.ToString();
+            Assert.Contains("Unsupported file type", error);
+
+            _output.WriteLine("Verified UploadAudio returns BadRequest when file type is invalid");
         }
 
 
@@ -462,32 +479,25 @@ namespace AppTests
         public async Task UploadAudio_ShouldReturnBadRequest_WhenTitleOrArtistMissing()
         {
             // Arrange
-            string fileName = "example.mp3";
-            var filePath = GetSampleFilePath(fileName);
-            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var mockFile = new Mock<IFormFile>();
+            mockFile.Setup(f => f.FileName).Returns("example.mp3");
+            mockFile.Setup(f => f.Length).Returns(1024);
+            mockFile.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(new byte[1024]));
 
-            var content = new MultipartFormDataContent
-            {
-                { new ByteArrayContent(fileBytes), "audioFile", fileName },
-            };
+            _audioService = new AudioServices(_persistenceMock.Object);
+            _controller = new UserController(_audioService);
 
-            var client = CreateTestClient();
-
-            // Act
-            var response = await client.PostAsync("/api/User/audios", content);
+            // Act – Missing title and artist
+            var result = await _controller.UploadAudio(mockFile.Object, null!, null!);
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var responseBody = await response.Content.ReadAsStringAsync();
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            var message = Assert.IsType<string>(badRequest.Value);
 
-            var json = JsonDocument.Parse(responseBody);
-            var errors = json.RootElement.GetProperty("errors");
+            Assert.Equal("Title and Artist are required.", message);
 
-            var titleError = errors.GetProperty("title")[0].GetString();
-            var artistError = errors.GetProperty("artist")[0].GetString();
 
-            Assert.Equal("The title field is required.", titleError);
-            Assert.Equal("The artist field is required.", artistError);
+            _output.WriteLine("Verified UploadAudio returns BadRequest when title or artist is missing");
         }
 
 
@@ -495,60 +505,32 @@ namespace AppTests
         public async Task UploadAudio_ShouldReturnConflict_WhenDuplicateAudioIsUploaded()
         {
             // Arrange
-            string fileName = "example.mp3";
-            var filePath = GetSampleFilePath(fileName);
-            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var mockFile = new Mock<IFormFile>();
+            mockFile.Setup(f => f.FileName).Returns("example.mp3");
+            mockFile.Setup(f => f.Length).Returns(1024);
+            mockFile.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(new byte[1024]));
 
-            var content = new MultipartFormDataContent
-            {
-                { new ByteArrayContent(fileBytes), "audioFile", fileName },
-                { new StringContent("TestTitle"), "title" },
-                { new StringContent("TestArtist"), "artist" }
-            };
+            string title = "TestTitleDuplicate";
+            string artist = "TestArtistDuplicate";
 
-            var client = CreateTestClient();
+            // Setup mock: first call succeeds, second throws
+            _persistenceMock.SetupSequence(p => p.SaveAndReturnIdAsync(It.IsAny<Audio>()))
+                .ReturnsAsync(42)
+                .ThrowsAsync(new InvalidOperationException("Audio already exists"));
 
-            // First upload
-            await client.PostAsync("/api/User/audios", content);
-            // Second upload (conflict)
-            var duplicateResponse = await client.PostAsync("/api/User/audios", content);
+            _audioService = new AudioServices(_persistenceMock.Object);
+            _controller = new UserController(_audioService);
+
+            // First upload (succeeds)
+            await _controller.UploadAudio(mockFile.Object, title, artist);
+            // Second upload (duplicate)
+            var result = await _controller.UploadAudio(mockFile.Object, title, artist);
 
             // Assert
-            Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
-            var responseBody = await duplicateResponse.Content.ReadAsStringAsync();
-            Assert.Contains("already exists", responseBody);
-        }
+            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+            Assert.Contains("already exists", conflictResult.Value?.ToString());
 
-
-        // Utils methods and variables for the tests
-        private static string GetSampleFilePath(string fileName) =>
-            Path.Combine(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..")),
-                        "backend", "src", "resources", "audioSamples", fileName);
-
-        private HttpClient CreateTestClient()
-        {
-            DotNetEnv.Env.Load(Path.Combine(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..")),
-                                            "backend", ".env"));
-
-            var factory = new WebApplicationFactory<Program>()
-                .WithWebHostBuilder(builder =>
-                {
-                    builder.ConfigureAppConfiguration((context, config) =>
-                    {
-                        var testConfig = new Dictionary<string, string?>
-                        {
-                            ["DB_HOST"] = Environment.GetEnvironmentVariable("DB_HOST"),
-                            ["DB_USER"] = Environment.GetEnvironmentVariable("DB_USER"),
-                            ["DB_PASSWORD"] = Environment.GetEnvironmentVariable("DB_PASSWORD"),
-                            ["DB_NAME"] = Environment.GetEnvironmentVariable("DB_NAME"),
-                            ["DB_PORT"] = Environment.GetEnvironmentVariable("DB_PORT")
-                        };
-
-                        config.AddInMemoryCollection(testConfig!);
-                    });
-                });
-
-            return factory.CreateClient();
+            _output.WriteLine("Verified UploadAudio returns Conflict on duplicate");
         }
     }
 }

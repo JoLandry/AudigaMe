@@ -70,7 +70,7 @@ namespace HttpAudioControllers
 
         // Handle POST request
         [HttpPost("audios")]
-        public async Task<IActionResult> UploadAudio([FromForm] IFormFile audioFile, [FromForm] string title, [FromForm] string artist)
+        public async Task<IActionResult> UploadAudio([FromForm] IFormFile? audioFile, [FromForm] string title, [FromForm] string artist)
         {
             // Check if audioFile has content
             if(audioFile == null || audioFile.Length == 0)
