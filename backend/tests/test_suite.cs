@@ -36,7 +36,7 @@ namespace AppTests
 
 
         [Fact]
-        public async Task GetAudioById_ShouldReturnNotFound_WhenAudioDoesNotExist()
+        public async Task GetAudioFileById_ShouldReturnNotFound_WhenAudioDoesNotExist()
         {
             // Arrange
             int invalidId = 99999999;
@@ -47,18 +47,18 @@ namespace AppTests
             _controller = new UserController(_audioService);
 
             // Act
-            var result = await _controller.GetAudioById(invalidId);
+            var result = await _controller.GetAudioFileById(invalidId);
 
             // Assert
             var notFound = Assert.IsType<NotFoundObjectResult>(result);
             Assert.Equal($"Audio with ID {invalidId} not found.", notFound.Value);
 
-            _output.WriteLine("Verified GetAudioById returns 404 for missing audio");
+            _output.WriteLine("Verified GetAudioFileById returns 404 for missing audio");
         }
 
 
         [Fact]
-        public async Task GetAudioById_ShouldReturnOk_WhenAudioExists()
+        public async Task GetAudioFileById_ShouldReturnOk_WhenAudioExists()
         {
             // Arrange
             int validId = 86573;
@@ -91,7 +91,7 @@ namespace AppTests
             var controller = new UserController(service);
 
             // Act
-            var result = await controller.GetAudioById(validId);
+            var result = await controller.GetAudioFileById(validId);
 
             // Assert
             var fileContentResult = Assert.IsType<FileContentResult>(result);
@@ -100,6 +100,84 @@ namespace AppTests
 
             File.Delete(testFilePath);
             _output.WriteLine("Verified GetAudioById returns Ok when exists");
+        }
+
+
+        [Fact]
+        public async Task GetAudioById_ShouldReturnOk_WhenAudioExists()
+        {
+            // Arrange
+            int validId = 3;
+            var mockAudios = new List<Audio>
+            {
+                new Audio
+                {
+                    Id = validId,
+                    Title = "SampleTitle",
+                    Artist = "SampleArtist",
+                    Type = ".mp3",
+                    Size = 1234,
+                    IsFavorite = false
+                }
+            };
+
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
+
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            // Act
+            var result = await _controller.GetAudioById(validId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedAudio = Assert.IsType<Audio>(okResult.Value);
+
+            Assert.Equal(validId, returnedAudio.Id);
+            Assert.Equal("SampleTitle", returnedAudio.Title);
+            Assert.Equal("SampleArtist", returnedAudio.Artist);
+            Assert.Equal(".mp3", returnedAudio.Type);
+            Assert.Equal(1234, returnedAudio.Size);
+            Assert.False(returnedAudio.IsFavorite);
+
+            _output.WriteLine("Verified GetAudioById returns Ok with correct audio object");
+        }
+
+
+        [Fact]
+        public async Task GetAudioById_ShouldReturnNotFound_WhenAudioDoesNotExist()
+        {
+            // Arrange
+            var mockAudios = new List<Audio>
+            {
+                new Audio
+                {
+                    Id = 1,
+                    Title = "SongA",
+                    Artist = "ArtistA",
+                    Type = ".mp3",
+                    Size = 1024,
+                    IsFavorite = false
+                }
+            };
+
+            int invalidId = 99999;
+
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
+
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            // Act
+            var result = await _controller.GetAudioById(invalidId);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Audio with ID {invalidId} not found.", notFoundResult.Value);
+
+            _output.WriteLine("Verified GetAudioById returns NotFound when audio does not exist");
         }
 
 

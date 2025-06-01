@@ -143,8 +143,8 @@ namespace HttpAudioControllers
 
 
         [HttpGet]
-        [Route("/audios/{id}")]
-        public async Task<IActionResult> GetAudioById(int id)
+        [Route("/audios/{id}/file")]
+        public async Task<IActionResult> GetAudioFileById(int id)
         {
             var audioToRetrieve = await _audioService.RetrieveAudioById(id);
             if(audioToRetrieve == null)
@@ -183,6 +183,21 @@ namespace HttpAudioControllers
 
             // Return the byte array as a file
             return File(fileData,"audio/mpeg");;
+        }
+
+
+        [HttpGet]
+        [Route("/audios/{id}")]
+        public async Task<IActionResult> GetAudioById(int id)
+        {
+            var audioToRetrieve = await _audioService.RetrieveAudioById(id);
+            if(audioToRetrieve == null)
+            {
+                return NotFound($"Audio with ID {id} not found.");
+            }
+
+            // Return Audio object in JSON format
+            return Ok(audioToRetrieve);
         }
 
 
