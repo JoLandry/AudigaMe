@@ -9,3 +9,4 @@ CREATE TABLE Audio (
 
 DROP TABLE Audio;
 
+CREATE INDEX idx_audio_isfavorite ON Audio (isFavorite);

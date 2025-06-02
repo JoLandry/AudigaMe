@@ -258,6 +258,84 @@ namespace AppTests
 
 
         [Fact]
+        public async Task GetFavoritesList_ShouldReturnNotFound_WhenEmpty()
+        {
+            // Arrange
+            var mockAudios = new List<Audio>();
+
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
+
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            // Act
+            var result = await _controller.GetFavoritesList();
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("No audios found.", notFoundResult.Value);
+
+            _output.WriteLine("Verified GetFavoritesList returns NotFound when no audio is present in the list");
+        }
+
+
+        [Fact]
+        public async Task GetFavoritesList_ShouldReturnOk_WithAudios()
+        {
+            // Arrange
+            var mockAudios = new List<Audio>
+            {
+                new Audio {
+                    Id = 1,
+                    Title = "Song1",
+                    Artist = "Artist1",
+                    Type = ".mp3",
+                    Size = 1000,
+                    IsFavorite = true
+                },
+                new Audio {
+                    Id = 5,
+                    Title = "Song5",
+                    Artist = "Artist5",
+                    Type = ".mp3",
+                    Size = 5000,
+                    IsFavorite = true
+                },
+                new Audio {
+                    Id = 6,
+                    Title = "Song6",
+                    Artist = "Artist6",
+                    Type = ".mp3",
+                    Size = 6000,
+                    IsFavorite = false
+                }
+            };
+
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
+            _persistenceMock.Setup(p => p.LoadFavoritesListAsync()).ReturnsAsync(
+                mockAudios.Where(a => a.IsFavorite).ToList()
+            );
+
+            _audioService = new AudioServices(_persistenceMock.Object);
+            await _audioService.InitializeAsync();
+            _controller = new UserController(_audioService);
+
+            // Act
+            var result = await _controller.GetFavoritesList();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var audios = Assert.IsType<List<Audio>>(okResult.Value);
+            Assert.Equal(2, audios.Count);
+            Assert.Equal("Song1", audios[0].Title);
+            Assert.Equal("Artist5", audios[1].Artist);
+
+            _output.WriteLine("Verified GetFavoritesList returns Ok when exists and well initialized");
+        }
+
+
+        [Fact]
         public async Task DeleteAudio_ShouldReturnNotFound_WhenAudioDoesNotExist()
         {
             // Arrange

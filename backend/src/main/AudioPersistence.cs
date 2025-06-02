@@ -7,6 +7,7 @@ namespace AudioPersistenceService
     {
         Task SaveAudioListAsync(List<Audio> audioList);
         Task<List<Audio>> LoadAudioListAsync();
+        Task<List<Audio>> LoadFavoritesListAsync();
         Task UpdateAudioAsync(Audio audio);
         Task DeleteAudioAsync(Audio audio);
         Task<int> SaveAndReturnIdAsync(Audio audio);
@@ -40,12 +41,12 @@ namespace AudioPersistenceService
                 {
                     audioList.Add(new Audio
                     {
-                        Id = reader.GetInt32(0),
-                        Title = reader.GetString(1),
-                        Artist = reader.GetString(2),
-                        Type = reader.GetString(3),
-                        Size = reader.GetInt32(4),
-                        IsFavorite = reader.GetBoolean(5)
+                        Id = reader.GetInt32(reader.GetOrdinal("id")),
+                        Title = reader.GetString(reader.GetOrdinal("title")),
+                        Artist = reader.GetString(reader.GetOrdinal("artist")),
+                        Type = reader.GetString(reader.GetOrdinal("audioFormat")),
+                        Size = reader.GetInt32(reader.GetOrdinal("audioSize")),
+                        IsFavorite = reader.GetBoolean(reader.GetOrdinal("isFavorite"))
                     });
                 }
             }
@@ -119,6 +120,33 @@ namespace AudioPersistenceService
             var id = await cmd.ExecuteScalarAsync();
 
             return Convert.ToInt32(id);
+        }
+
+        public async Task<List<Audio>> LoadFavoritesListAsync()
+        {
+            var favoritesList = new List<Audio>();
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            // Retrieve Audios with favorite status true
+            var cmd = new NpgsqlCommand("SELECT id, title, artist, audioFormat, audioSize, isFavorite FROM Audio WHERE isFavorite = TRUE;", conn);
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    favoritesList.Add(new Audio
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("id")),
+                        Title = reader.GetString(reader.GetOrdinal("title")),
+                        Artist = reader.GetString(reader.GetOrdinal("artist")),
+                        Type = reader.GetString(reader.GetOrdinal("audioFormat")),
+                        Size = reader.GetInt32(reader.GetOrdinal("audioSize")),
+                        IsFavorite = reader.GetBoolean(reader.GetOrdinal("isFavorite"))
+                    });
+                }
+            }
+
+            return favoritesList;
         }
     }
 }
