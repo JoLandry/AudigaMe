@@ -21,6 +21,18 @@ builder.Services.AddSingleton<IAudioService, AudioServices>();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
+// For CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5174")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 try
@@ -39,6 +51,8 @@ catch(Exception e)
 // Serve static files from wwwroot folder
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.UseCors("AllowFrontend");
 
 app.UseRouting();
 app.UseAuthorization();

@@ -2,19 +2,23 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { AudioType } from '../audio-type';
-import { getMainPlaylist, audioList } from '../http-api';
+import { getMainPlaylist, audioList, deleteAudio, downloadAudio, changeTitleAudio, changeArtistAudio } from '../http-api';
+import { AudioViewComponent } from '../audio-view/audio-view.component';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 
 export class HomeComponent implements OnInit {
   audios: AudioType[] = [];
+  hoveredAudio: number | null = null;
+  openMenuId: number | null = null;
 
   ngOnInit(){
     this.loadAudios();
@@ -23,5 +27,48 @@ export class HomeComponent implements OnInit {
   async loadAudios(){
     await getMainPlaylist();
     this.audios = audioList;
+  }
+
+  toggleMenu(id: number) {
+    this.openMenuId = this.openMenuId === id ? null : id;
+  }
+
+  async delete(audio: AudioType) {
+    if (confirm(`Are you sure you want to delete "${audio.title}"?`)) {
+      await deleteAudio(audio.id);
+      this.loadAudios();
+    }
+    // Close menu when done
+    this.openMenuId = null;
+  }
+
+  async download(audio: AudioType) {
+    try {
+      await downloadAudio(audio);
+    } catch (error) {
+      console.error('Download failed', error);
+    }
+  }
+
+  async changeTitle(audio: AudioType) {
+    try {
+      const title = prompt('Enter title for the audio:');
+      if (title != null) {
+        await changeTitleAudio(audio.id,title);
+      }
+    } catch (error) {
+      console.error('Update failed', error);
+    }
+  }
+
+  async changeArtist(audio: AudioType) {
+    try {
+      const artist = prompt('Enter artist for the audio:');
+      if (artist != null) {
+        await changeArtistAudio(audio.id,artist);
+      }
+    } catch (error) {
+      console.error('Update failed', error);
+    }
   }
 }
