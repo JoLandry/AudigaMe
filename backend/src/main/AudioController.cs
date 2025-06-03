@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AudioObjects;
 using AudioUtils;
+using PlaylistService;
 
 namespace HttpAudioControllers
 {
@@ -17,9 +18,12 @@ namespace HttpAudioControllers
     public class UserController : ControllerBase
     {
         private readonly IAudioService _audioService;
-        public UserController(IAudioService audioService)
+        private readonly IPlaylistManager _playlistManager;
+
+        public UserController(IAudioService audioService, IPlaylistManager playlistManager)
         {
             _audioService = audioService;
+            _playlistManager = playlistManager;
         }
 
         public async Task<IActionResult> InitializeAudioService()
@@ -27,11 +31,13 @@ namespace HttpAudioControllers
             try
             {
                 await _audioService.InitializeAsync();
-                return Ok("Audio service initialized successfully.");
+                await _playlistManager.LoadPlaylistsAsync();
+
+                return Ok("Audio service and Playlist manager initialized successfully.");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Error initializing audio service: " + ex.Message);
+                return StatusCode(500, "Error initializing audio service and playlist manager: " + ex.Message);
             }
         }
 
@@ -300,14 +306,14 @@ namespace HttpAudioControllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error updating the audio: " + ex.Message);
             }
         }
-        
-        
+
+
         [HttpGet]
         [Route("/favorites")]
         public async Task<IActionResult> GetFavoritesList()
         {
             var favoritesList = await _audioService.GetFavoritesList();
-            if(favoritesList == null || favoritesList.Count == 0)
+            if (favoritesList == null || favoritesList.Count == 0)
             {
                 return NotFound("No audios found.");
             }
@@ -323,6 +329,91 @@ namespace HttpAudioControllers
             }).ToList();
 
             return Ok(audioMetadataList);
+        }
+
+
+        [HttpGet]
+        [Route("/playlists")]
+        public async Task<IActionResult> GetAllPlaylists()
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            if (playlists == null || playlists.Count == 0)
+            {
+                return NotFound("No specific playlist found.");
+            }
+
+            var result = new List<object>();
+            // Fill the playlists with Audio objects based on ids
+            foreach (var playlist in playlists)
+            {
+                var audioList = new List<Audio>();
+                // Populate playlist
+                foreach (var audioId in playlist.AudioIds)
+                {
+                    var audio = await _audioService.RetrieveAudioById(audioId);
+                    if (audio != null)
+                    {
+                        audioList.Add(audio);
+                    }
+                }
+
+                result.Add(new
+                {
+                    PlaylistName = playlist.Name,
+                    Audios = audioList.Select(audio => new
+                    {
+                        audio.Id,
+                        audio.Title,
+                        audio.Artist,
+                        audio.Type,
+                        audio.Size,
+                        audio.IsFavorite
+                    }).ToList()
+                });
+            }
+
+            return Ok(result);
+        }
+        
+
+        [HttpGet]
+        [Route("/playlists/{name:string}")]
+        public async Task<IActionResult> GetPlaylist(string name)
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            if (playlists == null || playlists.Count == 0)
+            {
+                return NotFound("No specific playlist found.");
+            }
+
+            var wantedPlaylist = playlists.FirstOrDefault(p => p.Name == name);
+            if (wantedPlaylist == null)
+            {
+                return NotFound($"Playlist named '{name}' does not exist");
+            }
+
+            // Populate playlist
+            var audioList = new List<Audio>();
+            foreach (var audioId in wantedPlaylist.AudioIds)
+            {
+                var audio = await _audioService.RetrieveAudioById(audioId);
+                if (audio != null)
+                {
+                    audioList.Add(audio);
+                }
+            }
+
+            var Audios = audioList.Select(audio => new
+            {
+                audio.Id,
+                audio.Title,
+                audio.Artist,
+                audio.Type,
+                audio.Size,
+                audio.IsFavorite
+            }).ToList();
+
+            return Ok(Audios);
         }
     }
 }
