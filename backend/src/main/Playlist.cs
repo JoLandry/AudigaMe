@@ -17,6 +17,12 @@ namespace AudioPlaylist
             AudioIds = new List<int>();
         }
 
+        public Playlist(string name)
+        {
+            Name = name;
+            AudioIds = new List<int>();
+        }
+
         // Two Playlist objects are considered equal if the share the same name
         // or if they are the same reference of course
         public override bool Equals(object? o)

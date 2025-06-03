@@ -8,9 +8,10 @@ namespace PlaylistService
         Task<List<Playlist>> GetPlaylists();
         Task<List<Playlist>> LoadPlaylistsAsync();
         Task SavePlaylistsAsync(List<Playlist> playlists);
-        void AddAudioToPlaylist(string playlistName, int audioId);
-        void RemoveAudioFromPlaylist(string playlistName, int audioId);
-        void DeletePlaylist(string playlistName);
+        Task AddAudioToPlaylist(string playlistName, int audioId);
+        Task RemoveAudioFromPlaylist(string playlistName, int audioId);
+        Task DeletePlaylist(string playlistName);
+        Task CreatePlaylist(string playlistName);
     }
 
     public class PlaylistManager : IPlaylistManager
@@ -65,7 +66,7 @@ namespace PlaylistService
             return playlists;
         }
 
-        public void AddAudioToPlaylist(string playlistName, int audioId)
+        public async Task AddAudioToPlaylist(string playlistName, int audioId)
         {
             var playlist = _playlists.FirstOrDefault(p => p.Name == playlistName);
 
@@ -79,14 +80,14 @@ namespace PlaylistService
                 playlist.AudioIds.Add(audioId);
             }
 
-            // Save playlist when the audio was successfully added
             if (_filePath != null)
             {
-                File.WriteAllText(_filePath, JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true }));
+                var json = JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_filePath, json);
             }
         }
 
-        public void RemoveAudioFromPlaylist(string playlistName, int audioId)
+        public async Task RemoveAudioFromPlaylist(string playlistName, int audioId)
         {
             var playlist = _playlists.FirstOrDefault(p => p.Name == playlistName);
 
@@ -99,14 +100,14 @@ namespace PlaylistService
                 playlist.AudioIds.Remove(audioId);
             }
 
-            // Save playlist when the audio was successfully deleted
             if (_filePath != null)
             {
-                File.WriteAllText(_filePath, JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true }));
+                var json = JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_filePath, json);
             }
         }
 
-        public void DeletePlaylist(string playlistName)
+        public async Task DeletePlaylist(string playlistName)
         {
             var playlist = _playlists.FirstOrDefault(p => p.Name == playlistName);
             if (playlist != null)
@@ -114,7 +115,24 @@ namespace PlaylistService
                 _playlists.Remove(playlist);
                 if (_filePath != null)
                 {
-                    File.WriteAllText(_filePath, JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true }));
+                    var json = JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true });
+                    await File.WriteAllTextAsync(_filePath, json);
+                }
+            }
+        }
+
+        public async Task CreatePlaylist(string playlistName)
+        {
+            var playlist = _playlists.FirstOrDefault(p => p.Name == playlistName);
+            if (playlist == null)
+            {
+                playlist = new Playlist(playlistName);
+                _playlists.Add(playlist);
+                
+                if (_filePath != null)
+                {
+                    var json = JsonSerializer.Serialize(_playlists, new JsonSerializerOptions { WriteIndented = true });
+                    await File.WriteAllTextAsync(_filePath, json);
                 }
             }
         }

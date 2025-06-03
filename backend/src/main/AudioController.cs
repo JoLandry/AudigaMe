@@ -13,6 +13,11 @@ namespace HttpAudioControllers
         public bool? IsFavorite { get; set; }
     }
 
+    public class AudioAddToPlaylistRequest
+    {
+        public int AudioId { get; set; }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -374,7 +379,7 @@ namespace HttpAudioControllers
 
             return Ok(result);
         }
-        
+
 
         [HttpGet]
         [Route("/playlists/{name:string}")]
@@ -414,6 +419,78 @@ namespace HttpAudioControllers
             }).ToList();
 
             return Ok(Audios);
+        }
+
+
+        [HttpPost]
+        [Route("/playlists/{name}/audios")]
+        public async Task<IActionResult> AddAudioToPlaylist(string name, [FromBody] AudioAddToPlaylistRequest request)
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+
+            if (playlist == null)
+            {
+                return NotFound($"Playlist '{name}' not found.");
+            }
+
+            await _playlistManager.AddAudioToPlaylist(playlist.Name, request.AudioId);
+
+            return Ok($"Audio with id : {request.AudioId} added to playlist '{name}'.");
+        }
+
+
+        [HttpDelete]
+        [Route("/playlists/{name}/audios/{audioId}")]
+        public async Task<IActionResult> RemoveAudioFromPlaylist(string name, int audioId)
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+
+            if (playlist == null)
+            {
+                return NotFound($"Playlist '{name}' not found.");
+            }
+
+            await _playlistManager.RemoveAudioFromPlaylist(name, audioId);
+
+            return Ok($"Audio with id : {audioId} removed from playlist '{name}'.");
+        }
+
+
+        [HttpDelete]
+        [Route("/playlists/{name}/")]
+        public async Task<IActionResult> DeletePlaylist(string name, int audioId)
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+
+            if (playlist == null)
+            {
+                return NotFound($"Playlist '{name}' not found.");
+            }
+
+            await _playlistManager.DeletePlaylist(name);
+
+            return Ok($"Playlist named : {name} removed from the list of playlists.");
+        }
+
+
+        [HttpPost]
+        [Route("/playlists/{name}/")]
+        public async Task<IActionResult> CreatePlaylist(string name, [FromBody] AudioAddToPlaylistRequest request)
+        {
+            var playlists = await _playlistManager.GetPlaylists();
+            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+
+            if (playlist != null)
+            {
+                return Conflict($"Playlist '{name}' already exists.");
+            }
+
+            await _playlistManager.CreatePlaylist(name);
+
+            return Ok($"Playlist named : {name} was successfully created.");
         }
     }
 }
