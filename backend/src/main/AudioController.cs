@@ -222,7 +222,14 @@ namespace HttpAudioControllers
                 {
                     return NotFound($"Audio with id = {id} not found");
                 }
+                // Remove audio from the list containing all audios
                 await _audioService.RemoveAudioFromList(audioToDelete);
+                // Remove the audio from all the playlists it was in
+                var playlists = await _playlistManager.GetPlaylists();
+                foreach (var playlist in playlists)
+                {
+                    await _playlistManager.RemoveAudioFromPlaylist(playlist.Name,id);
+                }
 
                 // Delete the file itself from disk (since local server)
                 var rootDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));

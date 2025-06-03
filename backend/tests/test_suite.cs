@@ -441,9 +441,18 @@ namespace AppTests
 
             _audioService = new AudioServices(_persistenceMock.Object);
             _playlistManagerMock = new Mock<IPlaylistManager>();
+
             _playlistManagerMock
                 .Setup(pm => pm.LoadPlaylistsAsync())
                 .ReturnsAsync(new List<Playlist>());
+
+            _playlistManagerMock
+                .Setup(pm => pm.GetPlaylists())
+                .ReturnsAsync(new List<Playlist>());
+
+            _playlistManagerMock
+                .Setup(pm => pm.RemoveAudioFromPlaylist(It.IsAny<string>(), It.IsAny<int>()))
+                .Returns(Task.CompletedTask);
 
             await _audioService.InitializeAsync();
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
