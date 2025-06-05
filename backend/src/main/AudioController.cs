@@ -389,7 +389,7 @@ namespace HttpAudioControllers
 
 
         [HttpGet]
-        [Route("/playlists/{name:string}")]
+        [Route("/playlists/{name}")]
         public async Task<IActionResult> GetPlaylist(string name)
         {
             var playlists = await _playlistManager.GetPlaylists();
