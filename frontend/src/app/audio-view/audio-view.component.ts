@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AudioType } from '../audio-type';
-import { getAudio, downloadAudio, deleteAudio, isAudioInFavorites } from '../http-api';
+import { getAudio, downloadAudio, deleteAudio, isAudioInFavorites, getMainPlaylist, audioList, getPlaylist, getFavoritesList } from '../http-api';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,14 +13,20 @@ import { CommonModule } from '@angular/common';
 })
 export class AudioViewComponent implements OnInit {
   audio!: AudioType | null;
+  playlist: AudioType[] = [];
 
-  constructor(private route: ActivatedRoute) {
-    
-  }
+  constructor(private route: ActivatedRoute, private router: Router) {}
 
-  async ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.audio = await getAudio(id);
+  ngOnInit() {
+    this.route.paramMap.subscribe(async params => {
+      const id = Number(params.get('id'));
+
+      // Reload playlist each time just in case
+      await getMainPlaylist();
+      this.playlist = audioList;
+      // Load new audio
+      this.audio = await getAudio(id);
+    });
   }
 
   async delete(audio: AudioType) {
@@ -47,5 +53,27 @@ export class AudioViewComponent implements OnInit {
 
   sizeToNumber(audioSize: string) {
     return parseInt(audioSize);
+  }
+
+  switchToNext(currentAudio: AudioType) {
+    const index = this.playlist.findIndex(a => a.id === currentAudio.id);
+    if (this.playlist.length === 0){
+      return;
+    }
+    // Make the change even if current audio is the last -> circular so swap to first
+    const nextIndex = (index + 1) % this.playlist.length;
+    const nextAudio = this.playlist[nextIndex];
+    this.router.navigate(['/audios', nextAudio.id]);
+  }
+
+  switchToPrevious(currentAudio: AudioType) {
+    const index = this.playlist.findIndex(a => a.id === currentAudio.id);
+    if (this.playlist.length === 0){
+      return;
+    }
+    // Make the change even if current audio is the first -> circular so swap to last
+    const previousIndex = (index - 1 + this.playlist.length) % this.playlist.length;
+    const previousAudio = this.playlist[previousIndex];
+    this.router.navigate(['/audios', previousAudio.id]);
   }
 }

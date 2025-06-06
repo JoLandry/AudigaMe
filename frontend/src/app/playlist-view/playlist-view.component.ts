@@ -21,9 +21,10 @@ export class PlaylistViewComponent {
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    // To retrieve name from URL
-    this.playlistName = this.route.snapshot.paramMap.get('name') ?? '';
-    this.loadPlaylist();
+    this.route.params.subscribe(params => {
+      this.playlistName = params['name'] ?? '';
+      this.loadPlaylist();
+    });
   }
 
   async loadPlaylist() {

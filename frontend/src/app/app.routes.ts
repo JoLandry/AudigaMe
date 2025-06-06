@@ -8,5 +8,5 @@ export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'audios/:id', component: AudioViewComponent },
     { path: 'favorites', component: FavoritesComponent },
-    { path: 'playlists/:name', component: PlaylistViewComponent },
+    { path: 'playlists/:name', component: PlaylistViewComponent }
 ];

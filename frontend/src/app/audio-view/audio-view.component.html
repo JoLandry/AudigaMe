@@ -8,8 +8,10 @@
     </audio>
 
     <div class="audio-options">
+      <button (click)="switchToPrevious(audio)">Previous</button>
       <button (click)="delete(audio)">Delete</button>
       <button (click)="download(audio)">Download</button>
+      <button (click)="switchToNext(audio)">Next</button>
     </div>
   </div>
 
