@@ -447,7 +447,7 @@ namespace AppTests
                 .ReturnsAsync(new List<Playlist>());
 
             _playlistManagerMock
-                .Setup(pm => pm.GetPlaylists())
+                .Setup(pm => pm.GetAllPlaylists())
                 .ReturnsAsync(new List<Playlist>());
 
             _playlistManagerMock
@@ -801,7 +801,7 @@ namespace AppTests
             _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
 
             _playlistManagerMock = new Mock<IPlaylistManager>();
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists()).ReturnsAsync(mockPlaylists);
+            _playlistManagerMock.Setup(pm => pm.GetAllPlaylists()).ReturnsAsync(mockPlaylists);
 
             _audioService = new AudioServices(_persistenceMock.Object);
             await _audioService.InitializeAsync();
@@ -813,7 +813,7 @@ namespace AppTests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("No specific playlist found.", notFoundResult.Value);
+            Assert.Equal("No playlists found.", notFoundResult.Value);
 
             _output.WriteLine("Verified GetAllPlaylists returns NotFound when playlist list is empty");
         }
@@ -843,15 +843,18 @@ namespace AppTests
                 IsFavorite = true
             };
 
-            var mockAudios = new List<Audio> { audio1, audio2 };
+            var mockAudioList = new List<Audio> { audio1, audio2 };
             var mockPlaylists = new List<Playlist>
             {
-                new Playlist("Chill Vibes", new List<int>{1,2})
+                new Playlist { Id = 10, Name = "Chill Vibes" }
             };
+            var mockAudioIds = new List<int> { 1, 2 };
 
-            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudios);
+            _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(mockAudioList);
+
             _playlistManagerMock = new Mock<IPlaylistManager>();
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists()).ReturnsAsync(mockPlaylists);
+            _playlistManagerMock.Setup(pm => pm.GetAllPlaylists()).ReturnsAsync(mockPlaylists);
+            _playlistManagerMock.Setup(pm => pm.GetAudioIdsForPlaylistAsync(10)).ReturnsAsync(mockAudioIds);
 
             _audioService = new AudioServices(_persistenceMock.Object);
             await _audioService.InitializeAsync();
@@ -883,7 +886,7 @@ namespace AppTests
         {
             // Arrange
             _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(new List<Audio>());
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists()).ReturnsAsync(new List<Playlist>());
+            _playlistManagerMock.Setup(pm => pm.GetAllPlaylists()).ReturnsAsync(new List<Playlist>());
 
             _audioService = new AudioServices(_persistenceMock.Object);
             await _audioService.InitializeAsync();
@@ -891,11 +894,11 @@ namespace AppTests
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
             // Act
-            var result = await _controller.GetPlaylist("AnyName");
+            var result = await _controller.GetPlaylist("ImprobableNameForPlaylist");
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("No specific playlist found.", notFoundResult.Value);
+            Assert.Equal("Playlist named 'ImprobableNameForPlaylist' does not exist.", notFoundResult.Value);
 
             _output.WriteLine("Verified GetPlaylist returns NotFound when no playlists exist");
         }
@@ -905,13 +908,8 @@ namespace AppTests
         public async Task GetPlaylist_ShouldReturnNotFound_WhenPlaylistDoesNotExist()
         {
             // Arrange
-            var existingPlaylists = new List<Playlist>
-            {
-                new Playlist("Workout", new List<int> { 1, 2 })
-            };
-
             _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(new List<Audio>());
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists()).ReturnsAsync(existingPlaylists);
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync("Chill")).ReturnsAsync((Playlist?)null);
 
             _audioService = new AudioServices(_persistenceMock.Object);
             await _audioService.InitializeAsync();
@@ -923,7 +921,7 @@ namespace AppTests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Playlist named 'Chill' does not exist", notFoundResult.Value);
+            Assert.Equal("Playlist named 'Chill' does not exist.", notFoundResult.Value);
 
             _output.WriteLine("Verified GetPlaylist returns NotFound when requested playlist does not exist");
         }
@@ -953,10 +951,12 @@ namespace AppTests
             };
 
             var allAudios = new List<Audio> { audio1, audio2 };
-            var playlist = new Playlist("LoFiBeats", new List<int> { 1, 2 });
+            var playlist = new Playlist { Id = 20, Name = "LoFiBeats" };
+            var audioIds = new List<int> { 1, 2 };
 
             _persistenceMock.Setup(p => p.LoadAudioListAsync()).ReturnsAsync(allAudios);
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists()).ReturnsAsync(new List<Playlist> { playlist });
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync("LoFiBeats")).ReturnsAsync(playlist);
+            _playlistManagerMock.Setup(pm => pm.GetAudioIdsForPlaylistAsync(playlist.Id)).ReturnsAsync(audioIds);
 
             _audioService = new AudioServices(_persistenceMock.Object);
             await _audioService.InitializeAsync();
@@ -970,7 +970,6 @@ namespace AppTests
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returned = Assert.IsAssignableFrom<IEnumerable<object>>(okResult.Value);
             var returnedList = returned.ToList();
-
 
             Assert.Equal(2, returnedList.Count);
 
@@ -989,19 +988,12 @@ namespace AppTests
             string playlistName = "Chill";
             int audioId = 123;
 
-            var playlist = new Playlist
-            {
-                Name = playlistName,
-                AudioIds = new List<int> { audioId, 456 }
-            };
+            var playlist = new Playlist { Id = 5, Name = playlistName };
 
-            var playlists = new List<Playlist> { playlist };
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync(playlist);
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(playlists);
-
-            _playlistManagerMock.Setup(pm => pm.RemoveAudioFromPlaylist(playlistName, audioId));
-            _playlistManagerMock.Setup(pm => pm.SavePlaylistsAsync(playlists))
+            _playlistManagerMock.Setup(pm => pm.RemoveAudioFromPlaylist(playlistName, audioId))
                 .Returns(Task.CompletedTask);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
@@ -1023,11 +1015,11 @@ namespace AppTests
         public async Task RemoveAudioFromPlaylist_ShouldReturnNotFound_WhenPlaylistDoesNotExist()
         {
             // Arrange
-            string playlistName = "DoesNotExist";
+            string playlistName = "ThatPlaylistDoesNotExist";
             int audioId = 42;
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(new List<Playlist>());
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync((Playlist?)null);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
@@ -1054,8 +1046,8 @@ namespace AppTests
                 AudioId = audioIdToAdd
             };
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(new List<Playlist>());
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync((Playlist?)null);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
@@ -1084,18 +1076,14 @@ namespace AppTests
 
             var playlist = new Playlist
             {
-                Name = playlistName,
-                AudioIds = new List<int> { 42 }
+                Id = 1,
+                Name = playlistName
             };
 
-            var playlists = new List<Playlist> { playlist };
-
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(playlists);
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync(playlist);
 
             _playlistManagerMock.Setup(pm => pm.AddAudioToPlaylist(playlistName, audioIdToAdd));
-            _playlistManagerMock.Setup(pm => pm.SavePlaylistsAsync(playlists))
-                .Returns(Task.CompletedTask);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
@@ -1117,18 +1105,15 @@ namespace AppTests
         {
             // Arrange
             string playlistName = "Focus";
-            int notInPlaylistId = 0;
 
             var playlist = new Playlist
             {
-                Name = playlistName,
-                AudioIds = new List<int> { 1, 2 }
+                Id = 2,
+                Name = playlistName
             };
 
-            var playlists = new List<Playlist> { playlist };
-
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(playlists);
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync(playlist);
 
             _playlistManagerMock.Setup(pm => pm.DeletePlaylist(playlistName))
                 .Returns(Task.CompletedTask);
@@ -1136,13 +1121,15 @@ namespace AppTests
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
             // Act
-            var result = await _controller.DeletePlaylist(playlistName, notInPlaylistId);
+            var result = await _controller.DeletePlaylist(playlistName);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal($"Playlist named : {playlistName} removed from the list of playlists.", okResult.Value);
 
             _playlistManagerMock.Verify(pm => pm.DeletePlaylist(playlistName), Times.Once);
+
+            _output.WriteLine("Verified DeletePlaylist returns Ok when playlist exists and is deleted");
         }
 
 
@@ -1152,13 +1139,8 @@ namespace AppTests
             // Arrange
             string playlistName = "NewPlaylist";
             var playlists = new List<Playlist>();
-            int notInPlaylistId = 1;
-            var request = new AudioAddToPlaylistRequest
-            {
-                AudioId = notInPlaylistId
-            };
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
+            _playlistManagerMock.Setup(pm => pm.GetAllPlaylists())
                 .ReturnsAsync(playlists);
 
             _playlistManagerMock.Setup(pm => pm.CreatePlaylist(playlistName))
@@ -1167,13 +1149,15 @@ namespace AppTests
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
             // Act
-            var result = await _controller.CreatePlaylist(playlistName, request);
+            var result = await _controller.CreatePlaylist(playlistName);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal($"Playlist named : {playlistName} was successfully created.", okResult.Value);
 
             _playlistManagerMock.Verify(pm => pm.CreatePlaylist(playlistName), Times.Once);
+
+            _output.WriteLine("Verified CreatePlaylist returns Ok when playlist is created");
         }
 
 
@@ -1184,29 +1168,26 @@ namespace AppTests
             string playlistName = "ExistingPlaylist";
             var existingPlaylist = new Playlist
             {
-                Name = playlistName,
-                AudioIds = new List<int> { 1, 2 }
+                Id = 1,
+                Name = playlistName
             };
             var playlists = new List<Playlist> { existingPlaylist };
-            int notInPlaylistId = 1;
-            var request = new AudioAddToPlaylistRequest
-            {
-                AudioId = notInPlaylistId
-            };
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(playlists);
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync(existingPlaylist);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
             // Act
-            var result = await _controller.CreatePlaylist(playlistName, request);
+            var result = await _controller.CreatePlaylist(playlistName);
 
             // Assert
             var conflictResult = Assert.IsType<ConflictObjectResult>(result);
             Assert.Equal($"Playlist '{playlistName}' already exists.", conflictResult.Value);
 
             _playlistManagerMock.Verify(pm => pm.CreatePlaylist(It.IsAny<string>()), Times.Never);
+
+            _output.WriteLine("Verified CreatePlaylist returns Conflict when playlist already exists");
         }
 
 
@@ -1215,16 +1196,14 @@ namespace AppTests
         {
             // Arrange
             string playlistName = "NonExistent";
-            int notInPlaylistId = 0;
-            var playlists = new List<Playlist>();
 
-            _playlistManagerMock.Setup(pm => pm.GetPlaylists())
-                .ReturnsAsync(playlists);
+            _playlistManagerMock.Setup(pm => pm.GetPlaylistByNameAsync(playlistName))
+                .ReturnsAsync((Playlist?)null);
 
             _controller = new UserController(_audioService, _playlistManagerMock.Object);
 
             // Act
-            var result = await _controller.DeletePlaylist(playlistName, notInPlaylistId);
+            var result = await _controller.DeletePlaylist(playlistName);
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);

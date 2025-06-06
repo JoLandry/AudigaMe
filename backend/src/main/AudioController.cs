@@ -225,7 +225,7 @@ namespace HttpAudioControllers
                 // Remove audio from the list containing all audios
                 await _audioService.RemoveAudioFromList(audioToDelete);
                 // Remove the audio from all the playlists it was in
-                var playlists = await _playlistManager.GetPlaylists();
+                var playlists = await _playlistManager.GetAllPlaylists();
                 foreach (var playlist in playlists)
                 {
                     await _playlistManager.RemoveAudioFromPlaylist(playlist.Name,id);
@@ -348,19 +348,20 @@ namespace HttpAudioControllers
         [Route("/playlists")]
         public async Task<IActionResult> GetAllPlaylists()
         {
-            var playlists = await _playlistManager.GetPlaylists();
+            var playlists = await _playlistManager.GetAllPlaylists();
             if (playlists == null || playlists.Count == 0)
             {
-                return NotFound("No specific playlist found.");
+                return NotFound("No playlists found.");
             }
 
             var result = new List<object>();
-            // Fill the playlists with Audio objects based on ids
+
             foreach (var playlist in playlists)
             {
+                var audioIds = await _playlistManager.GetAudioIdsForPlaylistAsync(playlist.Id);
                 var audioList = new List<Audio>();
-                // Populate playlist
-                foreach (var audioId in playlist.AudioIds)
+
+                foreach (var audioId in audioIds)
                 {
                     var audio = await _audioService.RetrieveAudioById(audioId);
                     if (audio != null)
@@ -392,21 +393,17 @@ namespace HttpAudioControllers
         [Route("/playlists/{name}")]
         public async Task<IActionResult> GetPlaylist(string name)
         {
-            var playlists = await _playlistManager.GetPlaylists();
-            if (playlists == null || playlists.Count == 0)
+            var playlist = await _playlistManager.GetPlaylistByNameAsync(name);
+            if (playlist == null)
             {
-                return NotFound("No specific playlist found.");
+                return NotFound($"Playlist named '{name}' does not exist.");
             }
 
-            var wantedPlaylist = playlists.FirstOrDefault(p => p.Name == name);
-            if (wantedPlaylist == null)
-            {
-                return NotFound($"Playlist named '{name}' does not exist");
-            }
-
-            // Populate playlist
+            var audioIds = await _playlistManager.GetAudioIdsForPlaylistAsync(playlist.Id);
             var audioList = new List<Audio>();
-            foreach (var audioId in wantedPlaylist.AudioIds)
+
+            // Populate with audios
+            foreach (var audioId in audioIds)
             {
                 var audio = await _audioService.RetrieveAudioById(audioId);
                 if (audio != null)
@@ -415,7 +412,7 @@ namespace HttpAudioControllers
                 }
             }
 
-            var Audios = audioList.Select(audio => new
+            var result = audioList.Select(audio => new
             {
                 audio.Id,
                 audio.Title,
@@ -425,7 +422,7 @@ namespace HttpAudioControllers
                 audio.IsFavorite
             }).ToList();
 
-            return Ok(Audios);
+            return Ok(result);
         }
 
 
@@ -433,15 +430,14 @@ namespace HttpAudioControllers
         [Route("/playlists/{name}/audios")]
         public async Task<IActionResult> AddAudioToPlaylist(string name, [FromBody] AudioAddToPlaylistRequest request)
         {
-            var playlists = await _playlistManager.GetPlaylists();
-            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+            var playlist = await _playlistManager.GetPlaylistByNameAsync(name);
 
             if (playlist == null)
             {
                 return NotFound($"Playlist '{name}' not found.");
             }
 
-            await _playlistManager.AddAudioToPlaylist(playlist.Name, request.AudioId);
+            await _playlistManager.AddAudioToPlaylist(name,request.AudioId);
 
             return Ok($"Audio with id : {request.AudioId} added to playlist '{name}'.");
         }
@@ -451,15 +447,14 @@ namespace HttpAudioControllers
         [Route("/playlists/{name}/audios/{audioId}")]
         public async Task<IActionResult> RemoveAudioFromPlaylist(string name, int audioId)
         {
-            var playlists = await _playlistManager.GetPlaylists();
-            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+            var playlist = await _playlistManager.GetPlaylistByNameAsync(name);
 
             if (playlist == null)
             {
                 return NotFound($"Playlist '{name}' not found.");
             }
 
-            await _playlistManager.RemoveAudioFromPlaylist(name, audioId);
+            await _playlistManager.RemoveAudioFromPlaylist(name,audioId);
 
             return Ok($"Audio with id : {audioId} removed from playlist '{name}'.");
         }
@@ -467,10 +462,9 @@ namespace HttpAudioControllers
 
         [HttpDelete]
         [Route("/playlists/{name}/")]
-        public async Task<IActionResult> DeletePlaylist(string name, int audioId)
+        public async Task<IActionResult> DeletePlaylist(string name)
         {
-            var playlists = await _playlistManager.GetPlaylists();
-            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+            var playlist = await _playlistManager.GetPlaylistByNameAsync(name);
 
             if (playlist == null)
             {
@@ -485,10 +479,9 @@ namespace HttpAudioControllers
 
         [HttpPost]
         [Route("/playlists/{name}/")]
-        public async Task<IActionResult> CreatePlaylist(string name, [FromBody] AudioAddToPlaylistRequest request)
+        public async Task<IActionResult> CreatePlaylist(string name)
         {
-            var playlists = await _playlistManager.GetPlaylists();
-            var playlist = playlists.FirstOrDefault(p => p.Name == name);
+            var playlist = await _playlistManager.GetPlaylistByNameAsync(name);
 
             if (playlist != null)
             {
