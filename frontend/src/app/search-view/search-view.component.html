@@ -1,0 +1,28 @@
+<div class="audio-block">
+  <h2 class="center-title-search">Search results for "{{ query }}"</h2>
+
+  <div class="audioList">
+    <div *ngFor="let audio of searchedAudios" class="audio-container"
+        (mouseenter)="hoveredAudio = audio.id"
+        (mouseleave)="hoveredAudio = null">
+
+      <a [routerLink]="['/audios', audio.id]">
+        <div class="audio-title">{{ audio.title }}</div>
+        <div class="audio-artist">{{ audio.artist }}</div>
+        <div class="audio-info">{{ audio.type }}</div>
+      </a>
+
+      <div class="menu-wrapper" *ngIf="hoveredAudio === audio.id">
+        <button class="menu-button" (click)="toggleMenu(audio.id)">⋮</button>
+        <ul class="menu-options" *ngIf="openMenuId === audio.id">
+          <li (click)="delete(audio)">Delete audio</li>
+          <li (click)="download(audio)">Download audio</li>
+          <li (click)="changeTitle(audio)">Change Title</li>
+          <li (click)="changeArtist(audio)">Change Artist</li>
+          <li (click)="addToFavorites(audio)">Add to Favorites</li>
+          <li (click)="addToPlaylist(audio)">Add to a playlist</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

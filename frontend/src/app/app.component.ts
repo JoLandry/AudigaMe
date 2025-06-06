@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { getMainPlaylist, uploadAudio, getAllPlaylists, createPlaylist, deletePlaylist } from './http-api';
 import { FormsModule } from '@angular/forms';
 import { PlaylistType, AudioType } from './audio-type';
@@ -18,6 +18,8 @@ export class AppComponent {
   artist: string = '';
 
   playlists: PlaylistType[] = [];
+
+  constructor(private router: Router) {}
 
   async ngOnInit() {
     await this.loadPlaylists();
@@ -99,5 +101,17 @@ export class AppComponent {
     } else {
       alert(`Failed to delete playlist "${playlistName}".`);
     }
+  }
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const query = input.value.trim();
+    if (query.length > 0) {
+      this.router.navigate(['/search', query]);
+    }
+  }
+
+  triggerSearch(input: HTMLInputElement): void {
+    this.onSearch({ target: input } as unknown as Event);
   }
 }
