@@ -1,12 +1,14 @@
-import { AudioType, UpdateRequest } from './audio-type';
+import { AudioType, PlaylistType } from './audio-type';
 
 export const audiosURL = '/audios/';
 export const appURL = 'http://localhost:5174';
 export const controllerEndpoint = '/api/User';
+export const favoritesURL = '/favorites';
+export const playlistsURL = '/playlists/';
 
 export const audioList: AudioType[] = [];
 export const favoritesList: AudioType[] = [];
-
+export const allPlaylists: PlaylistType[] = [];
 
 
 // HTTP request to GET all the audios upload on the server
@@ -20,6 +22,7 @@ export async function getMainPlaylist(){
     {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     // Fill the list of audios
     const data = (await response.json()) as AudioType[];
     audioList.length = 0;
@@ -101,7 +104,11 @@ export async function deleteAudio(id: number) {
 // HTTP PUT request to change the status of favorite field for a given audio
 // removes or adds the audio to or from the Favorites playlist
 export async function changeFavoriteStatusAudio(id: number, newStatus: boolean) {
-  const updateRequest = new UpdateRequest(null, null, newStatus);
+  const updateRequest = {
+    title: null,
+    artist: null,
+    isFavorite: newStatus
+  };
 
   try {
     const response = await fetch(`${appURL}${controllerEndpoint}${audiosURL}${id}`, {
@@ -134,10 +141,6 @@ export async function changeFavoriteStatusAudio(id: number, newStatus: boolean) 
         }
       }
     }
-
-    // Refresh when update was successful
-    await getMainPlaylist();
-
   } catch (error) {
     console.error("Error updating favorite status:", error);
   }
@@ -146,7 +149,11 @@ export async function changeFavoriteStatusAudio(id: number, newStatus: boolean) 
 
 // HTTP PUT request to change the Title of an audio
 export async function changeTitleAudio(id: number, newTitle: string) {
-  const updateRequest = new UpdateRequest(newTitle, null, null);
+  const updateRequest = {
+    title: newTitle,
+    artist: null,
+    isFavorite: null
+  };
 
   const response = await fetch(`${appURL}${controllerEndpoint}${audiosURL}${id}`, {
     method: 'PUT',
@@ -167,7 +174,11 @@ export async function changeTitleAudio(id: number, newTitle: string) {
 
 // HTTP PUT request to change the Artist of an audio
 export async function changeArtistAudio(id: number, newArtist: string) {
-  const updateRequest = new UpdateRequest(null, newArtist, null);
+  const updateRequest = {
+    title: null,
+    artist: newArtist,
+    isFavorite: null
+  };
 
   const response = await fetch(`${appURL}${controllerEndpoint}${audiosURL}${id}`, {
     method: 'PUT',
@@ -187,8 +198,25 @@ export async function changeArtistAudio(id: number, newArtist: string) {
 
 
 // HTTP request to GET the favorites playlist
-export function getFavorites() : AudioType[] {
-  return favoritesList;
+export async function getFavoritesList(){
+  try {
+    const response = await fetch(appURL + favoritesURL, {
+      method: "GET",
+    });
+
+    if(!response.ok)
+    {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Fill the favorites with audios
+    const data = (await response.json()) as AudioType[];
+    favoritesList.length = 0;
+    favoritesList.push(...data);
+    console.log("Favorites list loaded successfully");
+  } catch(error){
+    console.error("Error loading list of favorites:", error);
+  }
 }
 
 
@@ -240,4 +268,116 @@ export async function downloadFavoritesPlaylist(){
   favoritesList.forEach(function(audio){
     downloadAudio(audio)
   });
+}
+
+
+// GET HTTP method to retrieve all the playlists on the server
+export async function getAllPlaylists(): Promise<PlaylistType[]> {
+  try {
+    const response = await fetch(appURL + playlistsURL, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const playlists: PlaylistType[] = await response.json();
+
+    allPlaylists.length = 0;
+    for (const playlist of playlists) {
+      allPlaylists.push(playlist);
+    }
+
+    localStorage.setItem('allPlaylists', JSON.stringify(playlists));
+    return playlists;
+  } catch (error) {
+    console.error("Error loading all playlists:", error);
+    return [];
+  }
+}
+
+
+// GET HTTP method to retrieve a specific playlist based on its name
+export async function getPlaylist(playlistName: string): Promise<AudioType[] | null> {
+  try {
+    const response = await fetch(appURL + playlistsURL + playlistName, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const audios = await response.json() as AudioType[];
+
+    return audios;
+  } catch (error) {
+    console.error(`Error fetching playlist "${playlistName}":`, error);
+    return null;
+  }
+}
+
+
+// HTTP Delete request to remove an audio from a given playlist
+export async function removeAudioFromPlaylist(playlistName: string, audioId: number): Promise<boolean> {
+  try {
+    const response = await fetch(appURL + playlistsURL + playlistName + audiosURL + audioId, {
+      method: 'DELETE',
+    });
+
+    return response.ok;
+  } catch (err) {
+    console.error(`Error removing audio ${audioId} from playlist ${playlistName}:`, err);
+    return false;
+  }
+}
+
+
+// HTTP POST request to add an audio to a given playlist
+export async function addAudioToPlaylist(playlistName: string, audioId: number): Promise<boolean> {
+  try {
+    const response = await fetch(appURL + playlistsURL + playlistName + audiosURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ audioId })
+    });
+
+    return response.ok;
+  } catch (err) {
+    console.error(`Error removing audio ${audioId} from playlist ${playlistName}:`, err);
+    return false;
+  }
+}
+
+
+// HTTP POST request to create a new playlist
+export async function createPlaylist(playlistName: string): Promise<boolean> {
+  try {
+    const response = await fetch(appURL + playlistsURL + playlistName + '/', {
+      method: 'POST',
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error(`Error creating playlist "${playlistName}":`, error);
+    return false;
+  }
+}
+
+
+// HTTP DELETE request to delete a playlist by name
+export async function deletePlaylist(playlistName: string): Promise<boolean> {
+  try {
+    const response = await fetch(appURL + playlistsURL + playlistName + '/', {
+      method: 'DELETE',
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error(`Error deleting playlist "${playlistName}":`, error);
+    return false;
+  }
 }

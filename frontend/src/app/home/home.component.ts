@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { AudioType } from '../audio-type';
-import { getMainPlaylist, audioList, deleteAudio, downloadAudio, changeTitleAudio, changeArtistAudio } from '../http-api';
-import { AudioViewComponent } from '../audio-view/audio-view.component';
+import { getMainPlaylist, audioList, deleteAudio, downloadAudio, changeTitleAudio, changeArtistAudio, changeFavoriteStatusAudio, addAudioToPlaylist, getPlaylist } from '../http-api';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -12,7 +11,8 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet, CommonModule, RouterModule],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrls: ['./home.component.css','../shared-playlist-style.css'],
+  encapsulation: ViewEncapsulation.None
 })
 
 export class HomeComponent implements OnInit {
@@ -48,6 +48,7 @@ export class HomeComponent implements OnInit {
     } catch (error) {
       console.error('Download failed', error);
     }
+    this.openMenuId = null;
   }
 
   async changeTitle(audio: AudioType) {
@@ -59,6 +60,7 @@ export class HomeComponent implements OnInit {
     } catch (error) {
       console.error('Update failed', error);
     }
+    this.openMenuId = null;
   }
 
   async changeArtist(audio: AudioType) {
@@ -70,5 +72,20 @@ export class HomeComponent implements OnInit {
     } catch (error) {
       console.error('Update failed', error);
     }
+    this.openMenuId = null;
+  }
+
+  async addToFavorites(audio: AudioType) {
+    await changeFavoriteStatusAudio(audio.id,true);
+    this.openMenuId = null;
+  }
+
+  async addToPlaylist(audio: AudioType){
+    const playlist = prompt('Enter the name of the playlist:');
+
+    if (playlist != null && getPlaylist(playlist) != null) {
+      await addAudioToPlaylist(playlist,audio.id);
+    }
+    this.openMenuId = null;
   }
 }

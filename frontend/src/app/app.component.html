@@ -20,7 +20,9 @@
       </a>
     </li>
     <li>
-      <img src="/heart.png" title="Favorites" class="feature" type="image/png">
+      <a [routerLink]="['/favorites']">
+        <img src="/heart.png" title="Favorites" class="feature" type="image/png">
+      </a>
     </li>
     <li>
       <label for="upload-input" title="Upload audio">
@@ -42,18 +44,18 @@
 </nav>
 
 <nav id="side-navbar">
-  <a  class="side-nav-item">
+  <a class="side-nav-item" style="text-decoration: underline;">
     All of my playlists
   </a>
-  <a  class="side-nav-item">
-    Playlist - Name of the first playlist
+  <a *ngFor="let playlist of playlists" class="side-nav-item" [routerLink]="['/playlists', playlist.playlistName]">
+    {{ playlist.playlistName }}
   </a>
-  <a  class="side-nav-item">
-    Playlist - Name of the second playlist
-  </a>
-  <a  class="side-nav-item">
-    Playlist - Name of the third playlist
-  </a>
+
+  <div class="playlist-actions">
+    <button (click)="createNewPlaylist()">Create Playlist</button>
+    <br>
+    <button (click)="removePlaylist()">Delete Playlist</button>
+  </div>
 </nav>
 
 <router-outlet></router-outlet>

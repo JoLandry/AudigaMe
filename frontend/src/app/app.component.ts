@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
-import { getMainPlaylist, uploadAudio } from './http-api';
+import { getMainPlaylist, uploadAudio, getAllPlaylists, createPlaylist, deletePlaylist } from './http-api';
 import { FormsModule } from '@angular/forms';
+import { PlaylistType, AudioType } from './audio-type';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, FormsModule, RouterModule],
+  imports: [RouterOutlet, FormsModule, RouterModule, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -15,6 +17,18 @@ export class AppComponent {
   title: string = '';
   artist: string = '';
 
+  playlists: PlaylistType[] = [];
+
+  async ngOnInit() {
+    await this.loadPlaylists();
+  }
+
+  async loadPlaylists() {
+    this.playlists = await getAllPlaylists();
+    console.log('Playlists loaded:', this.playlists);
+  }
+
+  // Upload audio
   async handleFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -52,5 +66,38 @@ export class AppComponent {
     input.value = '';
     // Get playlist after uploading the audio (for refresh)
     getMainPlaylist();
+  }
+
+  async createNewPlaylist() {
+    const playlistName = prompt("Enter the name of the new playlist:");
+    if (playlistName == null){
+      return;
+    }
+
+    const success = await createPlaylist(playlistName);
+    if (success) {
+      this.loadPlaylists();
+    } else {
+      alert(`Failed to create playlist "${playlistName}".`);
+    }
+  }
+
+  async removePlaylist() {
+    const playlistName = prompt("Enter the name of the playlist to delete:");
+    if (playlistName == null){
+      return;
+    } 
+
+    const confirmed = confirm(`Are you sure you want to delete "${playlistName}"?`);
+    if (!confirmed){
+      return;
+    }
+
+    const success = await deletePlaylist(playlistName);
+    if (success) {
+      this.loadPlaylists();
+    } else {
+      alert(`Failed to delete playlist "${playlistName}".`);
+    }
   }
 }

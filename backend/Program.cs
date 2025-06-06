@@ -18,7 +18,7 @@ var connectionString = $"Host={host};Username={user};Password={pass};Database={d
 
 builder.Services.AddSingleton<IAudioPersistence>(_ => new AudioPersistence(connectionString));
 builder.Services.AddSingleton<IAudioService, AudioServices>();
-builder.Services.AddSingleton<IPlaylistManager, PlaylistManager>();
+builder.Services.AddSingleton<IPlaylistManager>(_ => new PlaylistManager(connectionString));
 
 
 builder.Services.AddControllers();

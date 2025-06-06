@@ -1,24 +1,22 @@
 <div class="audio-block">
   <div class="audioList">
-    <div *ngFor="let audio of audios" class="audio-container" (mouseenter)="hoveredAudio = audio.id" (mouseleave)="hoveredAudio = null" >
+    <div *ngIf="favorites.length === 0">
+      <p>No favorites yet.</p>
+    </div>
+
+    <div *ngFor="let audio of favorites" class="audio-container" (mouseenter)="hoveredAudio = audio.id" (mouseleave)="hoveredAudio = null">
       <a [routerLink]="['/audios', audio.id]">
         <div class="audio-title">{{ audio.title }}</div>
         <div class="audio-artist">{{ audio.artist }}</div>
-        <div class="audio-info">
-          <span>{{ audio.type }}</span>
-        </div>
+        <div class="audio-info">{{ audio.type }}</div>
       </a>
 
       <div class="menu-wrapper" *ngIf="hoveredAudio === audio.id">
         <button class="menu-button" (click)="toggleMenu(audio.id)">⋮</button>
 
         <ul class="menu-options" *ngIf="openMenuId === audio.id">
-          <li (click)="delete(audio)">Delete audio</li>
+          <li (click)="removeFromFavorites(audio)">Remove from Favorites</li>
           <li (click)="download(audio)">Download audio</li>
-          <li (click)="changeTitle(audio)">Change Title</li>
-          <li (click)="changeArtist(audio)">Change Artist</li>
-          <li (click)="addToFavorites(audio)">Add to Favorites</li>
-          <li (click)="addToPlaylist(audio)">Add to a playlist</li>
         </ul>
       </div>
     </div>
