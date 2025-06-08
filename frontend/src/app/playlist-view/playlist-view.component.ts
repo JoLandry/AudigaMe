@@ -1,6 +1,7 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { AudioType } from '../audio-type';
-import { downloadAudio, removeAudioFromPlaylist, getPlaylist } from '../http-api';
+import { getPlaylist } from '../http-api';
+import { downloadAudio, removeAudioFromPlaylist } from '../utils'
 import { ActivatedRoute, RouterModule, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 

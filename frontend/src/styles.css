@@ -194,3 +194,19 @@ button:hover {
     background-color: var(--text-light);
     color: var(--background);
 }
+
+.toast-top-center {
+  top: 8.0rem;
+  left: 50%;
+  transform: translateX(-50%);
+  position: fixed;
+  z-index: 9999;
+  width: auto;
+  max-width: 90vw;
+}
+
+.toast-top-center .toast {
+  text-align: center;
+  min-width: 20rem;
+  max-width: 100%;
+}

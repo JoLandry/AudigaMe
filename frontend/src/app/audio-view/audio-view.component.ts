@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AudioType } from '../audio-type';
-import { getAudio, downloadAudio, deleteAudio, isAudioInFavorites, getMainPlaylist, audioList, getPlaylist, getFavoritesList } from '../http-api';
+import { getAudio, deleteAudio, getMainPlaylist, audioList } from '../http-api';
+import { isAudioInFavorites, downloadAudio } from '../utils'
 import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-audio-view',
@@ -15,13 +17,13 @@ export class AudioViewComponent implements OnInit {
   audio!: AudioType | null;
   playlist: AudioType[] = [];
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router, private toastr: ToastrService) {}
 
   ngOnInit() {
     this.route.paramMap.subscribe(async params => {
       const id = Number(params.get('id'));
 
-      // Reload playlist each time just in case
+      // Reload playlist
       await getMainPlaylist();
       this.playlist = audioList;
       // Load new audio
@@ -33,8 +35,9 @@ export class AudioViewComponent implements OnInit {
     if (confirm(`Are you sure you want to delete "${audio.title}"?`)) {
       try {
         await deleteAudio(audio.id);
+        this.toastr.success(`Deleted audio successfully from the server`);
       } catch(e) {
-        console.log("Audio could not be deleted from the server:" ,e);
+        this.toastr.error(`Failed to delete audio form the server`);
       }
     }
   }
@@ -42,8 +45,9 @@ export class AudioViewComponent implements OnInit {
   async download(audio: AudioType) {
     try {
       await downloadAudio(audio);
+      this.toastr.success(`Downloaded audio successfully`);
     } catch (error) {
-      console.error('Download failed', error);
+      this.toastr.error(`Failed to download audio`);
     }
   }
 
@@ -55,6 +59,7 @@ export class AudioViewComponent implements OnInit {
     return parseInt(audioSize);
   }
 
+  /* Method used to switch to the next audio in the playlist */
   switchToNext(currentAudio: AudioType) {
     const index = this.playlist.findIndex(a => a.id === currentAudio.id);
     if (this.playlist.length === 0){
@@ -66,6 +71,7 @@ export class AudioViewComponent implements OnInit {
     this.router.navigate(['/audios', nextAudio.id]);
   }
 
+  /* Method used to switch to the previous audio in the playlist */
   switchToPrevious(currentAudio: AudioType) {
     const index = this.playlist.findIndex(a => a.id === currentAudio.id);
     if (this.playlist.length === 0){

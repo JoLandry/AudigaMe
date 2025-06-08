@@ -1,4 +1,10 @@
 <div class="audio-block">
+  <div class="playlist-controls">
+    <button (click)="playPlaylist()">▶️ Play</button>
+  </div>
+
+  <audio #audioPlayer (ended)="onAudioEnded()" controls hidden></audio>
+  
   <div class="audioList">
     <div *ngFor="let audio of audios" class="audio-container" (mouseenter)="hoveredAudio = audio.id" (mouseleave)="hoveredAudio = null" >
       <a [routerLink]="['/audios', audio.id]">

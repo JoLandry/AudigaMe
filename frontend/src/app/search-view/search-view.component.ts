@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule, RouterOutlet } from '@angular/router';
 import { AudioType } from '../audio-type';
-import { getMainPlaylist, audioList, downloadAudio, deleteAudio, changeArtistAudio, changeTitleAudio, changeFavoriteStatusAudio, getPlaylist,addAudioToPlaylist } from '../http-api';
+import { getMainPlaylist, audioList, deleteAudio, changeArtistAudio, changeTitleAudio, changeFavoriteStatusAudio, getPlaylist } from '../http-api';
+import { downloadAudio, addAudioToPlaylist } from '../utils'
 import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-search-view',
@@ -17,7 +19,7 @@ export class SearchViewComponent implements OnInit {
   openMenuId: number | null = null;
   query: string = '';
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, private toastr: ToastrService) {}
 
   async ngOnInit() {
     this.route.params.subscribe(async params => {
@@ -41,8 +43,9 @@ export class SearchViewComponent implements OnInit {
   async download(audio: AudioType) {
     try {
       await downloadAudio(audio);
+      this.toastr.success('Downloaded audio successfully');
     } catch (err) {
-      console.error('Download failed:', err);
+      this.toastr.error('Failed to download audio');
     }
     this.openMenuId = null;
   }
@@ -51,9 +54,10 @@ export class SearchViewComponent implements OnInit {
     if (confirm(`Are you sure you want to delete "${audio.title}"?`)) {
       try {
         await deleteAudio(audio.id);
+        this.toastr.success('Audio successfully deleted from the server');
         this.searchedAudios = this.searchedAudios.filter(a => a.id !== audio.id);
       } catch (err) {
-        console.error('Delete failed:', err);
+        this.toastr.success('Failed to delete audio from the server');
       }
     }
   }
@@ -63,9 +67,10 @@ export class SearchViewComponent implements OnInit {
       const title = prompt('Enter title for the audio:');
       if (title != null) {
         await changeTitleAudio(audio.id,title);
+        this.toastr.success(`Update was successful, audio's title is now : "${title}"`);
       }
     } catch (error) {
-      console.error('Update failed', error);
+      this.toastr.error(`Update for the title failed`);
     }
     this.openMenuId = null;
   }
@@ -75,15 +80,17 @@ export class SearchViewComponent implements OnInit {
       const artist = prompt('Enter artist for the audio:');
       if (artist != null) {
         await changeArtistAudio(audio.id,artist);
+        this.toastr.success(`Update was successful, audio's artist is now : "${artist}"`);
       }
     } catch (error) {
-      console.error('Update failed', error);
+      this.toastr.error(`Update for the artist failed`);
     }
     this.openMenuId = null;
   }
 
   async addToFavorites(audio: AudioType) {
     await changeFavoriteStatusAudio(audio.id,true);
+    this.toastr.success('Aduio was successfully added to Favorites');
     this.openMenuId = null;
   }
 
@@ -92,6 +99,9 @@ export class SearchViewComponent implements OnInit {
 
     if (playlist != null && getPlaylist(playlist) != null) {
       await addAudioToPlaylist(playlist,audio.id);
+      this.toastr.success(`Audio was successfully added to playlist : "${playlist}"`);
+    } else {
+      this.toastr.error('Audio could not be added to a playlist');
     }
     this.openMenuId = null;
   }

@@ -1,8 +1,10 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { getFavoritesList, favoritesList, changeFavoriteStatusAudio, downloadAudio } from '../http-api';
+import { getFavoritesList, favoritesList, changeFavoriteStatusAudio } from '../http-api';
+import { downloadAudio } from '../utils'
 import { AudioType } from '../audio-type';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-favorites',
@@ -16,6 +18,8 @@ export class FavoritesComponent implements OnInit {
   favorites: AudioType[] = [];
   hoveredAudio: number | null = null;
   openMenuId: number | null = null;
+
+  constructor(private router: Router, private toastr: ToastrService) {}
 
   ngOnInit() {
     this.loadFavorites();
@@ -33,6 +37,7 @@ export class FavoritesComponent implements OnInit {
   async removeFromFavorites(audio: AudioType) {
     if (confirm(`Remove "${audio.title}" from favorites?`)) {
       await changeFavoriteStatusAudio(audio.id,false);
+      this.toastr.success(`Audio was successfully removed from Favorites`);
       // Refresh after deletion 
       this.loadFavorites();
     }
@@ -42,8 +47,9 @@ export class FavoritesComponent implements OnInit {
   async download(audio: AudioType) {
     try {
       await downloadAudio(audio);
+      this.toastr.success(`Downloaded audio successfully`);
     } catch (err) {
-      console.error('Download failed:', err);
+      this.toastr.error(`Failed to download audio`);
     }
     this.openMenuId = null;
   }

@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule, Router } from '@angular/router';
-import { getMainPlaylist, uploadAudio, getAllPlaylists, createPlaylist, deletePlaylist } from './http-api';
+import { getMainPlaylist, uploadAudio, getAllPlaylists } from './http-api';
+import { createPlaylist, deletePlaylist } from './utils';
 import { FormsModule } from '@angular/forms';
-import { PlaylistType, AudioType } from './audio-type';
+import { PlaylistType } from './audio-type';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +21,7 @@ export class AppComponent {
 
   playlists: PlaylistType[] = [];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private toastr: ToastrService) {}
 
   async ngOnInit() {
     await this.loadPlaylists();
@@ -27,16 +29,16 @@ export class AppComponent {
 
   async loadPlaylists() {
     this.playlists = await getAllPlaylists();
-    console.log('Playlists loaded:', this.playlists);
   }
 
   // Upload audio
   async handleFileSelect(event: Event) {
+    // File selector
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
     if (file == null) {
-      console.error('No file selected');
+      this.toastr.error(`No file was selected`);
       return;
     }
 
@@ -50,18 +52,14 @@ export class AppComponent {
     }
 
     try {
-      console.log("Uploading file:", file);
-      console.log("Title:", title);
-      console.log("Artist:", artist);
-
-      const uploadedAudio = await uploadAudio(file, title, artist);
-      console.log('Uploaded successfully:', uploadedAudio);
+      await uploadAudio(file, title, artist);
+      this.toastr.success(`Audio uploaded successfully`);
 
       // Reset attributes when POST is successful
       this.title = '';
       this.artist = '';
     } catch (error) {
-      console.error('Upload error:', error);
+      this.toastr.error(`The upload of the audio failed`);
     }
 
     // Reset file input so same file can be re-selected if needed
@@ -71,6 +69,7 @@ export class AppComponent {
   }
 
   async createNewPlaylist() {
+    // Ask for playlist name
     const playlistName = prompt("Enter the name of the new playlist:");
     if (playlistName == null){
       return;
@@ -78,15 +77,18 @@ export class AppComponent {
 
     const success = await createPlaylist(playlistName);
     if (success) {
+      this.toastr.success(`Playlist : "${playlistName}" created`);
       this.loadPlaylists();
     } else {
-      alert(`Failed to create playlist "${playlistName}".`);
+      this.toastr.error(`Failed to create playlist : "${playlistName}"`);
     }
   }
 
   async removePlaylist() {
+    // Ask for playlist name
     const playlistName = prompt("Enter the name of the playlist to delete:");
     if (playlistName == null){
+      this.toastr.error(`No playlist name was specified, nothing happened`);
       return;
     } 
 
@@ -97,9 +99,10 @@ export class AppComponent {
 
     const success = await deletePlaylist(playlistName);
     if (success) {
+      this.toastr.success(`Deleted playlist : "${playlistName}"`);
       this.loadPlaylists();
     } else {
-      alert(`Failed to delete playlist "${playlistName}".`);
+      this.toastr.error(`Failed to delete playlist : "${playlistName}"`);
     }
   }
 
