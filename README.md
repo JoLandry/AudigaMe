@@ -9,6 +9,8 @@ Built with:
   (Any PostgreSQL-compatible DBMS will do, including remote or SSH-tunneled instances)
 
 
+---
+
 ## Features
 
 AudigaMe offers a simple and efficient interface to manage audio files and playlists, including:
@@ -19,7 +21,7 @@ Upload and store audio files securely in the connected database
 **Playlist Creation & Management**  
 Create custom playlists and manage audio tracks
 
-**Play audios**
+**Play Audios**  
 Play audio files that were uploaded
 
 **Search Functionality**  
@@ -31,12 +33,14 @@ Download any uploaded audio file for offline use
 **Delete Audio Files or Playlists**  
 Clean up your library by removing unneeded audio files or entire playlists
 
-**Data Vizualisation**
+**Data Visualization**  
 Click on audios in the app to select them and see information about them 
 
 **REST API**  
 A clean and extendable HTTP API allowing interaction with all backend features
 
+
+---
 
 ## Prerequisites
 
@@ -68,7 +72,7 @@ It should normally print something like: 8.0.x
 - This will install both node and npm.
 - Check the installation:
 
-npm -v
+npm -v 
 
 node -v
 
@@ -86,7 +90,7 @@ It should display something such as: Angular CLI: 18.x.x
 ### 4. Setup PostgreSQL (backend)
 You must also possess the required tools concerning the database integration (PostgreSQL). Run:
 
-sudo apt update
+sudo apt update 
 
 sudo apt install postgresql postgresql-contrib
 
@@ -165,7 +169,7 @@ http://localhost:5174
 (Or connect to your server if you have a different configuration)
 
 
-## Tests
+## Tests 
 
 You will find a test suite for the backend only for this project. The frontend does not include tests because the main goal of this project was to have a better grasp of web development, especially backend side. I learned how to use and setup modern technologies such as Angular, .NET with an introduction to the C# language, and the integration of a database.
 
@@ -181,14 +185,14 @@ The application has been so far tested on the following platforms:
 - Firefox (latest)
 
 
-## Author
+## Author 
 LANDRY Jonathan
 
 Computer Science student at University of Bordeaux, France.
 Major: Software Engineering
 
 
-## License
+## License 
 This project was created as a personal initiative, outside any official academic coursework, during my Master's in Computer Science at the University of Bordeaux.
 
 It is released under the **MIT License**.
