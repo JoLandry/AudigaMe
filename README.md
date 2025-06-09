@@ -16,13 +16,10 @@ Built with:
 AudigaMe offers a simple and efficient interface to manage audio files and playlists, including:
 
 **Audio Upload**  
-Upload and store audio files securely in the connected database
+Upload and store audio files securely in the connected database and play them
 
 **Playlist Creation & Management**  
 Create custom playlists and manage audio tracks
-
-**Play Audios**  
-Play audio files that were uploaded
 
 **Search Functionality**  
 Easily search through available audio files by title or artist
@@ -33,11 +30,8 @@ Download any uploaded audio file for offline use
 **Delete Audio Files or Playlists**  
 Clean up your library by removing unneeded audio files or entire playlists
 
-**Data Visualization**  
-Click on audios in the app to select them and see information about them 
-
 **REST API**  
-A clean and extendable HTTP API allowing interaction with all backend features
+A clean and extendable HTTP API allowing interaction with all backend features and metadata vizualisation
 
 
 ---
@@ -73,7 +67,7 @@ It should normally print something like: 8.0.x
 - This will install both node and npm.
 - Check the installation:
 
-npm -v | 
+npm -v 
 
 node -v
 
@@ -91,7 +85,7 @@ It should display something such as: Angular CLI: 18.x.x
 ### 4. Setup PostgreSQL (backend)
 You must also possess the required tools concerning the database integration (PostgreSQL). Run:
 
-sudo apt update | 
+sudo apt update 
 
 sudo apt install postgresql postgresql-contrib
 
@@ -122,7 +116,7 @@ ssh -L 5432:your-db-host:5432 your-user@your-ssh-host
 ### 1. Start the backend
 Open a Terminal from the root directory of the project, and run :
 
-cd backend | 
+cd backend 
 
 dotnet run
 
@@ -147,7 +141,7 @@ https://dotnet.microsoft.com/en-us/
 ### 2. Start the frontend
 Open a Terminal from the root directory of the project, and run:
 
-cd frontend | 
+cd frontend 
 
 ng build --configuration production
 
@@ -173,7 +167,7 @@ http://localhost:5174
 
 ---
 
-## Tests 
+## Testing
 
 You will find a test suite for the backend only for this project. The frontend does not include tests because the main goal of this project was to have a better grasp of web development, especially backend side. I learned how to use and setup modern technologies such as Angular, .NET with an introduction to the C# language, and the integration of a database.
 
