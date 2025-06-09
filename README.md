@@ -52,6 +52,7 @@ A clean and extendable HTTP API allowing interaction with all backend features
   - A **Docker** container
   - A **remote** database (e.g., university-hosted, cloud provider)
 
+--- 
 
 ## Setup Guide – Installing Tools
 
@@ -72,7 +73,7 @@ It should normally print something like: 8.0.x
 - This will install both node and npm.
 - Check the installation:
 
-npm -v 
+npm -v | 
 
 node -v
 
@@ -90,13 +91,14 @@ It should display something such as: Angular CLI: 18.x.x
 ### 4. Setup PostgreSQL (backend)
 You must also possess the required tools concerning the database integration (PostgreSQL). Run:
 
-sudo apt update 
+sudo apt update | 
 
 sudo apt install postgresql postgresql-contrib
 
 ### 5. Quick note - Docker
 You can also configure your own Docker container etc. to run the app, particularly for the database. 
 
+--- 
 
 ## Environment Variables
 
@@ -113,13 +115,14 @@ If you're using an SSH tunnel, make sure it’s active before launching the back
 
 ssh -L 5432:your-db-host:5432 your-user@your-ssh-host
 
+---
 
 ## Running the App
 
 ### 1. Start the backend
 Open a Terminal from the root directory of the project, and run :
 
-cd backend
+cd backend | 
 
 dotnet run
 
@@ -144,7 +147,7 @@ https://dotnet.microsoft.com/en-us/
 ### 2. Start the frontend
 Open a Terminal from the root directory of the project, and run:
 
-cd frontend
+cd frontend | 
 
 ng build --configuration production
 
@@ -168,11 +171,13 @@ http://localhost:5174
 
 (Or connect to your server if you have a different configuration)
 
+---
 
 ## Tests 
 
 You will find a test suite for the backend only for this project. The frontend does not include tests because the main goal of this project was to have a better grasp of web development, especially backend side. I learned how to use and setup modern technologies such as Angular, .NET with an introduction to the C# language, and the integration of a database.
 
+---
 
 ## Compatibility
 
@@ -184,6 +189,7 @@ The application has been so far tested on the following platforms:
 **Web Browsers**
 - Firefox (latest)
 
+---
 
 ## Author 
 LANDRY Jonathan
@@ -191,6 +197,7 @@ LANDRY Jonathan
 Computer Science student at University of Bordeaux, France.
 Major: Software Engineering
 
+---
 
 ## License 
 This project was created as a personal initiative, outside any official academic coursework, during my Master's in Computer Science at the University of Bordeaux.
