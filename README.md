@@ -68,8 +68,9 @@ It should normally print something like: 8.0.x
 - This will install both node and npm.
 - Check the installation:
 
-node -v
 npm -v
+
+node -v
 
 ### 3. Install Angular CLI version 18 (for the frontend)
 Once Node.js and npm are correctly installed, install Angular by running :
@@ -86,6 +87,7 @@ It should display something such as: Angular CLI: 18.x.x
 You must also possess the required tools concerning the database integration (PostgreSQL). Run:
 
 sudo apt update
+
 sudo apt install postgresql postgresql-contrib
 
 ### 5. Quick note - Docker
@@ -114,6 +116,7 @@ ssh -L 5432:your-db-host:5432 your-user@your-ssh-host
 Open a Terminal from the root directory of the project, and run :
 
 cd backend
+
 dotnet run
 
 This will launch the server. By default, the software uses localhost with port 5174. Any server can be used. However, configuration will
@@ -138,6 +141,7 @@ https://dotnet.microsoft.com/en-us/
 Open a Terminal from the root directory of the project, and run:
 
 cd frontend
+
 ng build --configuration production
 
 This will build the client source code so that the user can communicate with the server and use the app through HTTP requests.
@@ -161,7 +165,7 @@ http://localhost:5174
 (Or connect to your server if you have a different configuration)
 
 
-## Testing
+## Tests
 
 You will find a test suite for the backend only for this project. The frontend does not include tests because the main goal of this project was to have a better grasp of web development, especially backend side. I learned how to use and setup modern technologies such as Angular, .NET with an introduction to the C# language, and the integration of a database.
 
@@ -177,16 +181,14 @@ The application has been so far tested on the following platforms:
 - Firefox (latest)
 
 
-## Author
-
+## Author
 LANDRY Jonathan
 
 Computer Science student at University of Bordeaux, France.
 Major: Software Engineering
 
 
-## License
-
+## License
 This project was created as a personal initiative, outside any official academic coursework, during my Master's in Computer Science at the University of Bordeaux.
 
 It is released under the **MIT License**.
