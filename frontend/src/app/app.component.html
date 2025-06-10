@@ -9,7 +9,7 @@
     </li>
   </ul>
 
-  <a [routerLink]="['/']">
+  <a [routerLink]="['/']" (click)="setCurrentPlaylistContextMain()">
     <img src="/logo.png" class="logo" type="image/png">
   </a>
 
@@ -20,7 +20,7 @@
       </a>
     </li>
     <li>
-      <a [routerLink]="['/favorites']">
+      <a [routerLink]="['/favorites']" (click)="setCurrentPlaylistContextFavorites()">
         <img src="/heart.png" title="Favorites" class="feature" type="image/png">
       </a>
     </li>
@@ -67,8 +67,11 @@
   <a class="side-nav-item" style="text-decoration: underline;">
     All of my playlists
   </a>
-  <a *ngFor="let playlist of playlists" class="side-nav-item" [routerLink]="['/playlists', playlist.playlistName]">
-    {{ playlist.playlistName }}
+  <a *ngFor="let playlist of playlists"
+    class="side-nav-item"
+    [routerLink]="['/playlists', playlist.playlistName]"
+    (click)="setCurrentPlaylistContext(playlist.playlistName)">
+      {{ playlist.playlistName }}
   </a>
 
   <div class="playlist-actions">

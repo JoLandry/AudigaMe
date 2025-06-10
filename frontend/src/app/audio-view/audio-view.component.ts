@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AudioType } from '../audio-type';
 import { getAudio, deleteAudio, getMainPlaylist, audioList } from '../http-api';
-import { isAudioInFavorites, downloadAudio } from '../utils'
+import { isAudioInFavorites, downloadAudio, currentPlaylistContext } from '../utils'
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 
@@ -23,10 +23,8 @@ export class AudioViewComponent implements OnInit {
     this.route.paramMap.subscribe(async params => {
       const id = Number(params.get('id'));
 
-      // Reload playlist
-      await getMainPlaylist();
-      this.playlist = audioList;
-      // Load new audio
+      // Use the playlist used in the current context 
+      this.playlist = [...currentPlaylistContext];
       this.audio = await getAudio(id);
     });
   }

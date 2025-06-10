@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule, Router } from '@angular/router';
-import { getMainPlaylist, uploadAudio, getAllPlaylists } from './http-api';
-import { createPlaylist, deletePlaylist } from './utils';
+import { getMainPlaylist, uploadAudio, getAllPlaylists, allPlaylists, favoritesList, audioList, getFavoritesList } from './http-api';
+import { createPlaylist, deletePlaylist, currentPlaylistContext } from './utils';
 import { FormsModule } from '@angular/forms';
 import { PlaylistType } from './audio-type';
 import { ToastrService } from 'ngx-toastr';
@@ -151,5 +151,37 @@ export class AppComponent {
 
   triggerSearch(input: HTMLInputElement): void {
     this.onSearch({ target: input } as unknown as Event);
+  }
+
+  async setCurrentPlaylistContext(playlistName: string) {
+    const playlist = allPlaylists.find(p => p.playlistName === playlistName);
+    if (playlist != null) {
+      currentPlaylistContext.length = 0;
+      currentPlaylistContext.push(...playlist.audios);
+    } else {
+      console.error(`Playlist "${playlistName}" not found in allPlaylists`);
+    }
+  }
+
+  async setCurrentPlaylistContextFavorites() {
+    // Refresh
+    await getFavoritesList();
+    if (favoritesList != null) {
+      currentPlaylistContext.length = 0;
+      currentPlaylistContext.push(...favoritesList);
+    } else {
+      console.error(`The Favorites could not be retrieved or does not contain any audio`);
+    }
+  }
+
+  async setCurrentPlaylistContextMain() {
+    // Refresh
+    await getMainPlaylist();
+    if (audioList != null) {
+      currentPlaylistContext.length = 0;
+      currentPlaylistContext.push(...audioList);
+    } else {
+      console.error(`The main playlist could not be retrieved or does not contain any audio`);
+    }
   }
 }

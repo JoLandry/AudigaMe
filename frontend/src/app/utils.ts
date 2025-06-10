@@ -2,6 +2,9 @@ import { favoritesList, appURL, audiosURL, playlistsURL } from './http-api'
 import { AudioType } from './audio-type'
 
 
+export const currentPlaylistContext: AudioType[] = [];
+
+
 /* Check if an audio is in the list of favorites */
 export function isAudioInFavorites(audio: AudioType) {
   return favoritesList.some(fav => fav.id === audio.id);

@@ -3,7 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { OnInit } from '@angular/core';
 import { AudioType } from '../audio-type';
 import { getMainPlaylist, audioList, deleteAudio, changeTitleAudio, changeArtistAudio, changeFavoriteStatusAudio, getPlaylist, appURL, audiosURL } from '../http-api';
-import { downloadAudio, addAudioToPlaylist } from '../utils'
+import { downloadAudio, addAudioToPlaylist, currentPlaylistContext } from '../utils'
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -32,8 +32,13 @@ export class HomeComponent implements OnInit {
   }
 
   async loadAudios(){
+    // Initialize the main playlist
     await getMainPlaylist();
     this.audios = audioList;
+    
+    // Populate the context playlist with the main playlist at initialization
+    currentPlaylistContext.length = 0;
+    currentPlaylistContext.push(...audioList);
   }
 
   toggleMenu(id: number) {
