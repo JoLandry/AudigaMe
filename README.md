@@ -173,6 +173,22 @@ You will find a test suite for the backend only for this project. The frontend d
 
 ---
 
+## Ideas of improvement and extra features
+
+This first version of the software gathers some basic features of an audio application. It can easily be improved, whether we are talking about speed,
+rendering, available features, etc. This first version is finished and I am quite satisfied with the final result even though it definitely has room for improvement. Writing this as I am making last adjustments, I am not determined enough to significantly upgrade the app so it is close to some professional software. However, maybe one day I will lean into it again and start making new features, better the ones that are already implemented.
+
+So here are some thoughts, or some ideas of potential improvement:
+- Sort the audios in the order that we want (customzied, alphabetically, etc.)
+- Make albums (regroup audios by bands, artists and whatnot)
+- Possibility of attaching pictures (images) to tracks
+- Play any audio or group of audios in loop
+- Play any audio or group of audios with indicated speed
+- Simulate Shazam's algorithm to find the name of a song
+- ...
+
+---
+
 ## Compatibility
 
 The application has been so far tested on the following platforms:
