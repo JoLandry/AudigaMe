@@ -36,12 +36,32 @@
         accept=".mp3,.wav"
       />
     </li>
-    <li>
-      <img src="/settings.png" title="Settings" class="feature" type="image/png">
+    <li class="settings-container" (click)="toggleSettingsMenu()">
+      <img src="/settings.png" title="Settings" class="feature" type="image/png" />
+      
+      <div class="settings-dropdown" *ngIf="settingsOpen">
+        <ul>
+          <li (click)="openAbout(); settingsOpen = false">About</li>
+          <li (click)="clearCache(); settingsOpen = false">Clear Cache</li>
+        </ul>
+      </div>
     </li>
   </ul>
 
 </nav>
+
+<div class="about-modal" *ngIf="aboutVisible">
+  <div class="about-content">
+    <h2>About AudigaMe</h2>
+    <p><strong>Version:</strong> 1.0.0</p>
+    <p><strong>Author:</strong> Jonathan LANDRY</p>
+    <p><strong>University:</strong> University of Bordeaux, France</p>
+    <p><strong>Technologies:</strong> Angular 18, .NET 8, PostgreSQL</p>
+    <p><strong>License:</strong> MIT License</p>
+    <p><strong>GitHub:</strong> <a href="https://github.com/JoLandry/audigame" target="_blank">View Project</a></p>
+    <button (click)="closeAbout()">Close</button>
+  </div>
+</div>
 
 <nav id="side-navbar">
   <a class="side-nav-item" style="text-decoration: underline;">

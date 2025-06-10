@@ -20,15 +20,50 @@ export class AppComponent {
   artist: string = '';
 
   playlists: PlaylistType[] = [];
+  settingsOpen = false;
+  aboutVisible = false;
 
   constructor(private router: Router, private toastr: ToastrService) {}
 
   async ngOnInit() {
     await this.loadPlaylists();
+    document.addEventListener('click', this.closeSettingsIfClickedOutside.bind(this));
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('click', this.closeSettingsIfClickedOutside.bind(this));
   }
 
   async loadPlaylists() {
     this.playlists = await getAllPlaylists();
+  }
+
+  toggleSettingsMenu() {
+    this.settingsOpen = !this.settingsOpen;
+  }
+
+  clearCache() {
+    localStorage.clear();
+    this.toastr.success('Cache was successfully cleared');
+  }
+
+  openAbout() {
+    this.aboutVisible = true;
+  }
+
+  closeAbout() {
+    this.aboutVisible = false;
+  }
+
+  private closeSettingsIfClickedOutside(event: MouseEvent) {
+    if (!this.settingsOpen){
+      return;
+    }
+
+    const settingsEl = document.querySelector('.settings-container');
+    if (settingsEl && !settingsEl.contains(event.target as Node)) {
+      this.settingsOpen = false;
+    }
   }
 
   // Upload audio
