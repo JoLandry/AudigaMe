@@ -1,4 +1,15 @@
 <div class="audio-block">
+  <div class="playlist-controls">
+    <button (click)="playPlaylist()">▶️ Play</button>
+    <button (click)="stopPlaylist()">⏹️ Stop</button>
+  </div>
+
+  <div *ngIf="currentAudioInfo && isPlaying" class="current-track-info">
+    🎵 <strong>Current Track:</strong> {{ currentAudioInfo }}
+  </div>
+
+  <audio *ngIf="isPlaying" #audioPlayer (ended)="onAudioEnded()" controls></audio>
+
   <div class="audioList">
     <div *ngIf="favorites.length === 0">
       <p>No favorites yet.</p>

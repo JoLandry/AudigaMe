@@ -1,9 +1,14 @@
 <div class="audio-block">
   <div class="playlist-controls">
     <button (click)="playPlaylist()">▶️ Play</button>
+    <button (click)="stopPlaylist()">⏹️ Stop</button>
   </div>
 
-  <audio #audioPlayer (ended)="onAudioEnded()" controls hidden></audio>
+  <div *ngIf="currentAudioInfo && isPlaying" class="current-track-info">
+    🎵 <strong>Current Track:</strong> {{ currentAudioInfo }}
+  </div>
+
+  <audio *ngIf="isPlaying" #audioPlayer (ended)="onAudioEnded()" controls></audio>
   
   <div class="audioList">
     <div *ngFor="let audio of audios" class="audio-container" (mouseenter)="hoveredAudio = audio.id" (mouseleave)="hoveredAudio = null" >

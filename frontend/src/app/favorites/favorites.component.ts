@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { getFavoritesList, favoritesList, changeFavoriteStatusAudio } from '../http-api';
+import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { getFavoritesList, favoritesList, changeFavoriteStatusAudio, appURL, audiosURL } from '../http-api';
 import { downloadAudio } from '../utils'
 import { AudioType } from '../audio-type';
 import { CommonModule } from '@angular/common';
@@ -18,6 +18,12 @@ export class FavoritesComponent implements OnInit {
   favorites: AudioType[] = [];
   hoveredAudio: number | null = null;
   openMenuId: number | null = null;
+
+  isPlaying: boolean = false;
+  currentAudioInfo: string | null = null;
+
+  @ViewChild('audioPlayer') audioPlayerRef!: ElementRef<HTMLAudioElement>;
+    currentIndex: number = 0;
 
   constructor(private router: Router, private toastr: ToastrService) {}
 
@@ -52,6 +58,49 @@ export class FavoritesComponent implements OnInit {
       this.toastr.error(`Failed to download audio`);
     }
     this.openMenuId = null;
+  }
+
+  playPlaylist() {
+    if (this.favorites.length === 0){
+      return;
+    }
+    this.currentIndex = 0;
+    this.isPlaying = true;
+    setTimeout(() => {
+      this.playCurrentAudio();
+    });
+  }
+
+  stopPlaylist() {
+    if (this.audioPlayerRef?.nativeElement) {
+      this.audioPlayerRef.nativeElement.pause();
+      this.audioPlayerRef.nativeElement.currentTime = 0;
+    }
+    this.isPlaying = false;
+    this.currentIndex = 0;
+    this.currentAudioInfo = null;
+  }
+
+  playCurrentAudio() {
+    const currentAudio = this.favorites[this.currentIndex];
+    if (currentAudio == null){
+      return;
+    }
+    const audioPlayer = this.audioPlayerRef.nativeElement;
+    audioPlayer.src = appURL + audiosURL + currentAudio.id + '/file';
+
+    const audioTitle = currentAudio.title;
+    const audioArtist = currentAudio.artist;
+    this.currentAudioInfo = `${audioTitle} - ${audioArtist}`;
+    
+    audioPlayer.play().catch(err => console.error("Playback failed", err));
+  }
+
+  onAudioEnded() {
+    this.currentIndex++;
+    if (this.currentIndex < this.favorites.length) {
+      this.playCurrentAudio();
+    }
   }
 }
 

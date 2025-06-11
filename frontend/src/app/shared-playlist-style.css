@@ -81,3 +81,42 @@
   background-color: var(--text-light);
   color: var(--background);
 }
+
+.audio-block .playlist-controls {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+}
+
+.audio-block .playlist-controls button {
+  padding: 1em 2em;
+  font-size: 1.4rem;
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  border: none;
+  border-radius: 0.6em;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
+}
+
+.audio-block .playlist-controls button:hover {
+  background-color: var(--primary-dark);
+}
+
+.audio-block audio {
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 2vh;
+}
+
+.audio-block .current-track-info {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-white);
+  margin: 1vh 0;
+}

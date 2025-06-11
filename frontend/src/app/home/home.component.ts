@@ -21,6 +21,9 @@ export class HomeComponent implements OnInit {
   audios: AudioType[] = [];
   hoveredAudio: number | null = null;
   openMenuId: number | null = null;
+  
+  isPlaying: boolean = false;
+  currentAudioInfo: string | null = null;
 
   @ViewChild('audioPlayer') audioPlayerRef!: ElementRef<HTMLAudioElement>;
   currentIndex: number = 0;
@@ -35,7 +38,7 @@ export class HomeComponent implements OnInit {
     // Initialize the main playlist
     await getMainPlaylist();
     this.audios = audioList;
-    
+
     // Populate the context playlist with the main playlist at initialization
     currentPlaylistContext.length = 0;
     currentPlaylistContext.push(...audioList);
@@ -50,16 +53,34 @@ export class HomeComponent implements OnInit {
       return;
     }
     this.currentIndex = 0;
-    this.playCurrentAudio();
+    this.isPlaying = true;
+    setTimeout(() => {
+      this.playCurrentAudio();
+    });
+  }
+
+  stopPlaylist() {
+    if (this.audioPlayerRef?.nativeElement) {
+      this.audioPlayerRef.nativeElement.pause();
+      this.audioPlayerRef.nativeElement.currentTime = 0;
+    }
+    this.isPlaying = false;
+    this.currentIndex = 0;
+    this.currentAudioInfo = null;
   }
 
   playCurrentAudio() {
     const currentAudio = this.audios[this.currentIndex];
-    if (!currentAudio){
+    if (currentAudio == null){
       return;
     }
     const audioPlayer = this.audioPlayerRef.nativeElement;
-    audioPlayer.src = appURL + audiosURL + currentAudio.id + '/file'
+    audioPlayer.src = appURL + audiosURL + currentAudio.id + '/file';
+
+    const audioTitle = currentAudio.title;
+    const audioArtist = currentAudio.artist;
+    this.currentAudioInfo = `${audioTitle} - ${audioArtist}`;
+    
     audioPlayer.play().catch(err => console.error("Playback failed", err));
   }
 

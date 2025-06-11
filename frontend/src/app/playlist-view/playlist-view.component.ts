@@ -1,6 +1,6 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AudioType } from '../audio-type';
-import { getPlaylist } from '../http-api';
+import { getPlaylist, appURL, audiosURL } from '../http-api';
 import { downloadAudio, removeAudioFromPlaylist } from '../utils'
 import { ActivatedRoute, RouterModule, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -18,6 +18,12 @@ export class PlaylistViewComponent {
   audios: AudioType[] = [];
   hoveredAudio: number | null = null;
   openMenuId: number | null = null;
+
+  isPlaying: boolean = false;
+    currentAudioInfo: string | null = null;
+  
+  @ViewChild('audioPlayer') audioPlayerRef!: ElementRef<HTMLAudioElement>;
+  currentIndex: number = 0;
 
   constructor(private route: ActivatedRoute) {}
 
@@ -55,5 +61,48 @@ export class PlaylistViewComponent {
       console.error('Download failed:', err);
     }
     this.openMenuId = null;
+  }
+
+  playPlaylist() {
+    if (this.audios.length === 0){
+      return;
+    }
+    this.currentIndex = 0;
+    this.isPlaying = true;
+    setTimeout(() => {
+      this.playCurrentAudio();
+    });
+  }
+
+  stopPlaylist() {
+    if (this.audioPlayerRef?.nativeElement) {
+      this.audioPlayerRef.nativeElement.pause();
+      this.audioPlayerRef.nativeElement.currentTime = 0;
+    }
+    this.isPlaying = false;
+    this.currentIndex = 0;
+    this.currentAudioInfo = null;
+  }
+
+  playCurrentAudio() {
+    const currentAudio = this.audios[this.currentIndex];
+    if (currentAudio == null){
+      return;
+    }
+    const audioPlayer = this.audioPlayerRef.nativeElement;
+    audioPlayer.src = appURL + audiosURL + currentAudio.id + '/file';
+
+    const audioTitle = currentAudio.title;
+    const audioArtist = currentAudio.artist;
+    this.currentAudioInfo = `${audioTitle} - ${audioArtist}`;
+    
+    audioPlayer.play().catch(err => console.error("Playback failed", err));
+  }
+
+  onAudioEnded() {
+    this.currentIndex++;
+    if (this.currentIndex < this.audios.length) {
+      this.playCurrentAudio();
+    }
   }
 }

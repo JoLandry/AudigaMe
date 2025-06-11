@@ -1,5 +1,16 @@
 <div class="audio-block">
-  <h2>{{ playlistName }}</h2>
+  <h2 style="text-align: center; margin-top: 4vh;">{{ playlistName }}</h2>
+
+  <div class="playlist-controls">
+    <button (click)="playPlaylist()">▶️ Play</button>
+    <button (click)="stopPlaylist()">⏹️ Stop</button>
+  </div>
+
+  <div *ngIf="currentAudioInfo && isPlaying" class="current-track-info">
+    🎵 <strong>Current Track:</strong> {{ currentAudioInfo }}
+  </div>
+
+  <audio *ngIf="isPlaying" #audioPlayer (ended)="onAudioEnded()" controls></audio>
 
   <div class="audioList">
     <div *ngFor="let audio of audios" class="audio-container"
