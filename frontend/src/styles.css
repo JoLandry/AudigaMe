@@ -196,7 +196,7 @@ button:hover {
 }
 
 .toast-top-center {
-  top: 8.0rem;
+  top: 5.0rem;
   left: 50%;
   transform: translateX(-50%);
   position: fixed;

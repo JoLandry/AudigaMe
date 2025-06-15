@@ -34,6 +34,8 @@ export class AudioViewComponent implements OnInit {
       try {
         await deleteAudio(audio.id);
         this.toastr.success(`Deleted audio successfully from the server`);
+        // Navigate back to home after deletion
+        this.router.navigate(['/home']);
       } catch(e) {
         this.toastr.error(`Failed to delete audio form the server`);
       }
