@@ -1,0 +1,58 @@
+.audio-view-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5vw;
+  margin-top: 5vh;
+  padding: 2vh 7vw 2vh 7vw;
+  flex-wrap: wrap;
+}
+
+.audio-player-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc(60vw - 5vw);
+}
+
+.audio-image {
+  width: 20vw;
+  height: 20vw;
+  max-width: 25vh;
+  max-height: 25vh;
+  object-fit: contain;
+  margin-bottom: 3vh;
+}
+
+audio {
+  width: 60%;
+  height: 3.5vh;
+  margin-top: 2vh;
+}
+
+.audio-options {
+  margin-top: 3vh;
+  display: flex;
+  gap: 3vw;
+}
+
+.audio-options button {
+  padding: 1vh 2vw;
+  font-size: 1.8vh;
+  border-radius: 0.5vh;
+  cursor: pointer;
+}
+
+.audio-metadata-section {
+  border-left: 0.4vh solid #ccc;
+  padding-left: 3vw;
+  width: calc(30vw - 5vw);
+  min-width: 250px;
+}
+
+.audio-metadata-section h2,
+.audio-metadata-section p {
+  font-size: 2vh;
+  margin-bottom: 2vh;
+}

@@ -1,0 +1,35 @@
+<div class="audio-block">
+  <div class="playlist-controls">
+    <button (click)="playPlaylist()">▶️ Play</button>
+    <button (click)="stopPlaylist()">⏹️ Stop</button>
+  </div>
+
+  <div *ngIf="currentAudioInfo && isPlaying" class="current-track-info">
+    🎵 <strong>Current Track:</strong> {{ currentAudioInfo }}
+  </div>
+
+  <audio *ngIf="isPlaying" #audioPlayer (ended)="onAudioEnded()" controls></audio>
+
+  <div class="audioList">
+    <div *ngIf="favorites.length === 0">
+      <p>No favorites yet.</p>
+    </div>
+
+    <div *ngFor="let audio of favorites" class="audio-container" (mouseenter)="hoveredAudio = audio.id" (mouseleave)="hoveredAudio = null">
+      <a [routerLink]="['/audios', audio.id]">
+        <div class="audio-title">{{ audio.title }}</div>
+        <div class="audio-artist">{{ audio.artist }}</div>
+        <div class="audio-info">{{ audio.type }}</div>
+      </a>
+
+      <div class="menu-wrapper" *ngIf="hoveredAudio === audio.id">
+        <button class="menu-button" (click)="toggleMenu(audio.id)">⋮</button>
+
+        <ul class="menu-options" *ngIf="openMenuId === audio.id">
+          <li (click)="removeFromFavorites(audio)">Remove from Favorites</li>
+          <li (click)="download(audio)">Download audio</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

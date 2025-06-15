@@ -1,0 +1,36 @@
+<div class="audio-block">
+  <h2 style="text-align: center; margin-top: 4vh;">{{ playlistName }}</h2>
+
+  <div class="playlist-controls">
+    <button (click)="playPlaylist()">▶️ Play</button>
+    <button (click)="stopPlaylist()">⏹️ Stop</button>
+  </div>
+
+  <div *ngIf="currentAudioInfo && isPlaying" class="current-track-info">
+    🎵 <strong>Current Track:</strong> {{ currentAudioInfo }}
+  </div>
+
+  <audio *ngIf="isPlaying" #audioPlayer (ended)="onAudioEnded()" controls></audio>
+
+  <div class="audioList">
+    <div *ngFor="let audio of audios" class="audio-container"
+        (mouseenter)="hoveredAudio = audio.id"
+        (mouseleave)="hoveredAudio = null">
+
+      <a [routerLink]="['/audios', audio.id]">
+        <div class="audio-title">{{ audio.title }}</div>
+        <div class="audio-artist">{{ audio.artist }}</div>
+        <div class="audio-info">{{ audio.type }}</div>
+      </a>
+
+      <div class="menu-wrapper" *ngIf="hoveredAudio === audio.id">
+        <button class="menu-button" (click)="toggleMenu(audio.id)">⋮</button>
+        <ul class="menu-options" *ngIf="openMenuId === audio.id">
+          <li (click)="removeAudio(audio)">Remove from Playlist</li>
+          <li (click)="download(audio)">Download Audio</li>
+        </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>

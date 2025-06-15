@@ -1,1 +1,212 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --background: #202124;
+    --overlay: #f9f9f97e;
+    --img-margin: .8vw;
+    --secondary-color: #222222;
+    --header_h: 7.5vh;
+    --img_select_width: 60vw;
+    --img-view-w: 75vw;
+    --text-light: #E0E0E0;
+    --text-white: #FFFFFF;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text-light);
+    padding-top: var(--header_h);
+    font-family: Arial, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+  
+#top-navbar {
+    height: var(--header_h);
+    background-color: var(--secondary-color);
+    box-shadow: 0 0 .7vh 0 #81808094;
+    border-bottom-style: solid;
+    border-bottom-width: .1vh;
+    border-bottom-color: rgb(110, 112, 114);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+    color: var(--text-white);
+}
+
+.logo {
+    cursor: pointer;
+    position: absolute;
+    height: calc(var(--header_h)/1.5);
+    max-width: 25vw;
+    margin-top: calc(var(--header_h)/6);
+    left: 50%;
+    transform: translateX(-50%);
+}
+  
+.rightmost-features {
+    cursor: pointer;
+    list-style-type: none;
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 1vw;
+    width: fit-content;
+    height: var(--header_h);
+    align-items: center;
+    gap: 2vw;
+}
+
+.leftmost-features {
+    cursor: pointer;
+    list-style-type: none;
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 1vw;
+    width: fit-content;
+    height: var(--header_h);
+    align-items: center;
+    gap: 2vw;
+}
+
+.feature {
+    height: calc(var(--header_h)/2.5);
+    max-width: var(--header_h);
+}
+  
+#side-navbar {
+    position: fixed;
+    top: var(--header_h);
+    left: 0;
+    height: 100%;
+    width: calc(100vw/7);
+    background-color: var(--secondary-color);
+    border-bottom-color: rgb(110, 112, 114);
+    box-shadow: 0 0 .7vh 0 #81808094;
+    z-index: 1;
+    padding-top: 1vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vh;
+    color: var(--text-white);
+}
+
+.side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    padding: 0.5vh 1vw;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    color: var(--text-light);
+    transition: background-color 0.3s;
+}
+
+.side-nav-item:hover {
+    background-color: var(--hover-color);
+    color: var(--text-white);
+}
+
+.side-nav-icon {
+    height: 2rem;
+    width: auto;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(var(--header_h)/1.5);
+    width: 15vw;
+    background-color: rgb(92, 92, 92);
+    border-radius: 20px;
+    padding: 0 1vw;
+    color: var(--text-light);
+    position: relative;
+}
+
+.search-bar input {
+    flex: 1;
+    height: 100%;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 1rem;
+    border: none;
+    outline: none;
+}
+
+.search-bar img {
+    height: calc(var(--header_h)/2);
+    cursor: pointer;
+    margin-left: 0.5vw;
+}
+
+.audioList {
+    width: calc(50vw - 2vw);
+    display: flex;
+    flex-direction: column;
+    margin: calc(var(--header_h) * 1.7) auto 0 auto;
+    padding: 1vw;
+    gap: 1.5vh;
+    position: relative;
+}
+  
+.audio-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: var(--secondary-color);
+    padding: 1vw;
+    box-shadow: 0 0 0.5vh 0 #81808094;
+    color: var(--text-light);
+}
+  
+.audio-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+  
+.audio-artist {
+    font-size: 1rem;
+    color: var(--text-white);
+}
+  
+.audio-info {
+    font-size: 0.9rem;
+    margin-top: 0.5vh;
+}
+  
+button {
+    margin-top: 1vh;
+    padding: 0.5vh 1vw;
+    background-color: var(--background);
+    color: var(--text-white);
+    border: 1px solid var(--text-light);
+    cursor: pointer;
+}
+  
+button:hover {
+    background-color: var(--text-light);
+    color: var(--background);
+}
+
+.toast-top-center {
+  top: 5.0rem;
+  left: 50%;
+  transform: translateX(-50%);
+  position: fixed;
+  z-index: 9999;
+  width: auto;
+  max-width: 90vw;
+}
+
+.toast-top-center .toast {
+  text-align: center;
+  min-width: 20rem;
+  max-width: 100%;
+}

@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Angular build files
+backend/wwwroot/*
+
 # User-specific files
 *.rsuser
 *.suo
@@ -15,6 +18,9 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+
+# Ignore the uploads directory
+backend/src/resources/uploads/
 
 # Mono auto generated files
 mono_crash.*
@@ -59,6 +65,9 @@ dlldata.c
 
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
+
+*.sln
+backend/*.txt
 
 # .NET
 project.lock.json
