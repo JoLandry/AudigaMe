@@ -119,14 +119,14 @@ body {
 .search-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Space between the input and icon */
+    justify-content: space-between;
     height: calc(var(--header_h)/1.5);
     width: 15vw;
     background-color: rgb(92, 92, 92);
     border-radius: 20px;
     padding: 0 1vw;
     color: var(--text-light);
-    position: relative; /* Position for the search icon */
+    position: relative;
 }
 
 .search-bar input {
@@ -142,13 +142,13 @@ body {
 .search-bar img {
     height: calc(var(--header_h)/2);
     cursor: pointer;
-    margin-left: 0.5vw; /* Small margin between icon and input */
+    margin-left: 0.5vw;
 }
 
 .audioList {
     width: calc(50vw - 2vw);
     display: flex;
-    flex-direction: column; /* Display items vertically */
+    flex-direction: column;
     margin: calc(var(--header_h) * 1.7) auto 0 auto;
     padding: 1vw;
     gap: 1.5vh;
@@ -157,7 +157,7 @@ body {
   
 .audio-container {
     display: flex;
-    flex-direction: column; /* Display text vertically */
+    flex-direction: column;
     align-items: center;
     text-align: center;
     background-color: var(--secondary-color);
