@@ -8,6 +8,11 @@ Built with:
 - **PostgreSQL** as the database
   (Any PostgreSQL-compatible DBMS will do, including remote or SSH-tunneled instances)
 
+---
+
+## Preview 
+
+To get an idea of how the applcation works, you can watch the demo video on the GitHub repo. You will find it in the Issues.
 
 ---
 
@@ -197,7 +202,8 @@ The application has been so far tested on the following platforms:
 - Ubuntu 22.04 LTS
 
 **Web Browsers**
-- Firefox (latest)
+- Firefox : Version 139.0.4 (64 bits)
+- Brave : Version 1.79.123 (64 bits)
 
 ---
 
