@@ -47,38 +47,6 @@ namespace HttpAudioControllers
         }
 
 
-        // Send POST request
-        public async Task sendPostForAudio(Audio audio, string path)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                var formData = new MultipartFormDataContent();
-
-                formData.Add(new StringContent(audio.Title), "Title");
-                formData.Add(new StringContent(audio.Artist), "Artist");
-                formData.Add(new StringContent(audio.Type), "Type");
-                formData.Add(new StringContent(audio.Id.ToString()), "Id");
-                formData.Add(new StringContent(audio.Size.ToString()), "Size");
-                formData.Add(new StringContent(audio.IsFavorite.ToString()), "False");
-
-                byte[] audioData = await System.IO.File.ReadAllBytesAsync(path);
-                formData.Add(new ByteArrayContent(audioData), "Data", Path.GetFileName(path));
-
-                var response = await httpClient.PostAsync("http://localhost:5174/audios/", formData);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("Uploaded file successfully!");
-                }
-                else
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error uploading file: {response.StatusCode}. Message: {responseBody}");
-                }
-            }
-        }
-
-
         // Handle POST request
         [HttpPost("audios")]
         public async Task<IActionResult> UploadAudio([FromForm] IFormFile? audioFile, [FromForm] string title, [FromForm] string artist)

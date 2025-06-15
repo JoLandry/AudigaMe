@@ -23,6 +23,7 @@ namespace PlaylistService
         {
             _connectionString = connectionString;
         }
+        
 
         public async Task<List<Playlist>> GetAllPlaylists()
         {
@@ -78,6 +79,7 @@ namespace PlaylistService
             await cmd.ExecuteNonQueryAsync();
         }
 
+
         public async Task AddAudioToPlaylist(string playlistName, int audioId)
         {
             await using var conn = new NpgsqlConnection(_connectionString);
@@ -112,6 +114,7 @@ namespace PlaylistService
             // Commit changes (validate transaction)
             await insertCmd.ExecuteNonQueryAsync();
         }
+
 
         public async Task RemoveAudioFromPlaylist(string playlistName, int audioId)
         {

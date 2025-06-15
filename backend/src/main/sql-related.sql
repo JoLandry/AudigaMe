@@ -7,8 +7,6 @@ CREATE TABLE Audio (
     isFavorite BOOLEAN
 );
 
-DROP TABLE Audio;
-
 CREATE INDEX idx_audio_isfavorite ON Audio (isFavorite);
 
 CREATE TABLE Playlist (

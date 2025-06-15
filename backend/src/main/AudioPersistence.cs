@@ -26,6 +26,7 @@ namespace AudioPersistenceService
         {
             _connectionString = "";
         }
+        
 
         public async Task<List<Audio>> LoadAudioListAsync()
         {
@@ -54,6 +55,7 @@ namespace AudioPersistenceService
             return audioList;
         }
 
+
         public async Task SaveAudioListAsync(List<Audio> audioList)
         {
             foreach (var audio in audioList)
@@ -61,6 +63,7 @@ namespace AudioPersistenceService
                 await UpdateAudioAsync(audio);
             }
         }
+
 
         public async Task UpdateAudioAsync(Audio audio)
         {
@@ -88,6 +91,7 @@ namespace AudioPersistenceService
             await cmd.ExecuteNonQueryAsync();
         }
 
+
         public async Task DeleteAudioAsync(Audio audio)
         {
             await using var conn = new NpgsqlConnection(_connectionString);
@@ -100,6 +104,7 @@ namespace AudioPersistenceService
             // Commit changes (validate transaction)
             await cmd.ExecuteNonQueryAsync();
         }
+
 
         public async Task<int> SaveAndReturnIdAsync(Audio audio)
         {
@@ -121,6 +126,7 @@ namespace AudioPersistenceService
 
             return Convert.ToInt32(id);
         }
+
 
         public async Task<List<Audio>> LoadFavoritesListAsync()
         {
